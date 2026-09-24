@@ -1,24 +1,10 @@
-{
-  "name": "ibiapaba-express",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "lucide-react": "^0.344.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
-    "@vitejs/plugin-react": "^4.2.1",
-    "typescript": "^5.2.2",
-    "vite": "^5.1.6"
-  }
+import React from 'react';
+
+export default function App() {
+  return (
+    <div style={{ padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
+      <h1>IbiapabaExpress</h1>
+      <p>Aplicação PWA no ar com sucesso!</p>
+    </div>
+  );
 }
