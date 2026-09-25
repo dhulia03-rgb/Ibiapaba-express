@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AppProvider, useApp } from './context/AppContext';
-import { AdminProvider, useAdmin } from './context/AdminContext';
+import { AppProvider, useApp } from './Context/AppContext';
+import { AdminProvider, useAdmin } from './Context/AdminContext';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { Header } from './components/common/Header';
 import { CustomerHome } from './components/customer/CustomerHome';
