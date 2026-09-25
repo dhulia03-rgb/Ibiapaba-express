@@ -220,6 +220,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+<div className="min-h-screen bg-slate-950 text-white p-4">
+  {/* O teu cabeçalho ou conteúdo normal */}
+  <header className="mb-6">
+    <h1 className="text-xl font-bold">IbiapabaExpress</h1>
+  </header>
+
+  {/* O nosso Painel de Controlo do Administrador */}
+  <AdminControlPro />
+</div>
 
   const addQuote = (service: string, description: string) => {
     const newQ: QuoteItem = {
