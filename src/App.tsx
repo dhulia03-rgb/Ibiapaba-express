@@ -30,12 +30,17 @@ import {
   Gift,
   Package,
   Award,
-  Smartphone,
+  BarChart3,
+  Activity,
+  Layers,
+  ArrowUpRight,
+  Filter,
+  Eye,
   Check
 } from 'lucide-react';
 
 // ============================================================================
-// CONFIGURAÇÃO DO SUPABASE & FALLBACK
+// CONFIGURAÇÃO DO SUPABASE
 // ============================================================================
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -64,42 +69,36 @@ export interface StoreItem {
 
 export interface OrderItem {
   id: string;
-  title: string;
+  customer: string;
   store: string;
-  status: 'Pendente' | 'Em Preparo' | 'A Caminho' | 'Entregue';
+  status: 'Pendente' | 'Em Preparo' | 'Em Trânsito' | 'Entregue';
   price: number;
   date: string;
+  type: 'Peça' | 'Serviço' | 'Leva e Traz';
 }
 
 export interface QuoteItem {
   id: string;
   service: string;
+  customer: string;
   description: string;
   budget: string;
   status: 'Aberto' | 'Respondido' | 'Finalizado';
 }
 
-export interface LevaETrazItem {
-  id: string;
-  vehicle: string;
-  pickupAddress: string;
-  workshop: string;
-  status: 'Agendado' | 'Em Coleta' | 'Na Oficina' | 'Devolvido';
-}
-
 // ============================================================================
-// CONTEXTOS DA APLICAÇÃO (APP & ADMIN)
+// CONTEXTO GLOBAL DA APLICAÇÃO
 // ============================================================================
 interface AppContextType {
   role: Role;
   setRole: (role: Role) => void;
+  viewMode: 'public' | 'admin_control_pro';
+  setViewMode: (mode: 'public' | 'admin_control_pro') => void;
   cartCount: number;
   setCartCount: React.Dispatch<React.SetStateAction<number>>;
   orders: OrderItem[];
   quotes: QuoteItem[];
-  levaETrazList: LevaETrazItem[];
   addQuote: (service: string, description: string, budget: string) => void;
-  addLevaETraz: (vehicle: string, pickupAddress: string, workshop: string) => void;
   isAdminAuthenticated: boolean;
   loginAdmin: (pass: string) => boolean;
   logoutAdmin: () => void;
@@ -109,26 +108,26 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [role, setRole] = useState<Role>('cliente');
-  const [cartCount, setCartCount] = useState<number>(1);
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'public' | 'admin_control_pro'>('public');
+  const [cartCount, setCartCount] = useState<number>(2);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(true); // Ativo por padrão no preview
 
   const [orders] = useState<OrderItem[]>([
-    { id: 'ORD-8921', title: 'Kit Transmissão & Óleo 20W50', store: 'AutoPeças & Mecânica Tianguá', status: 'Em Preparo', price: 185.00, date: 'Hoje, 14:20' },
-    { id: 'ORD-8810', title: 'Revisão Preventiva Freios', store: 'Centro Automotivo Ibiapina', status: 'Entregue', price: 120.00, date: 'Ontem, 09:15' }
+    { id: 'ORD-9821', customer: 'João Paulo (Tianguá)', store: 'AutoPeças & Mecânica Tianguá', status: 'Em Trânsito', price: 245.00, date: 'Hoje, 14:20', type: 'Peça' },
+    { id: 'ORD-9822', customer: 'Maria Clara (Ubajara)', store: 'Ubajara MotoPeças', status: 'Em Preparo', price: 89.90, date: 'Hoje, 14:05', type: 'Serviço' },
+    { id: 'ORD-9823', customer: 'Carlos Eduardo (Ibiapina)', store: 'Centro Automotivo Ibiapina', status: 'Entregue', price: 450.00, date: 'Hoje, 11:30', type: 'Leva e Traz' },
+    { id: 'ORD-9824', customer: 'Antônio Silva (Viçosa)', store: 'AutoPeças Tianguá', status: 'Pendente', price: 130.00, date: 'Hoje, 10:15', type: 'Peça' }
   ]);
 
   const [quotes, setQuotes] = useState<QuoteItem[]>([
-    { id: 'COT-101', service: 'Troca de Embreagem Moto', description: 'Honda CG 160 Fan 2023 - Rangendo ao engatar', budget: 'R$ 180,00 - R$ 240,00', status: 'Respondido' },
-    { id: 'COT-102', service: 'Alinhamento & Balanceamento 3D', description: 'Gol G6 - Pneus dianteiros desgastando desigual', budget: 'R$ 100,00 - R$ 150,00', status: 'Aberto' }
-  ]);
-
-  const [levaETrazList, setLevaETrazList] = useState<LevaETrazItem[]>([
-    { id: 'LT-301', vehicle: 'Titan 160 Prata', pickupAddress: 'Rua Coronel Antonino, Centro - Tianguá', workshop: 'Oficina Central Tianguá', status: 'Em Coleta' }
+    { id: 'COT-501', customer: 'Lucas Santos', service: 'Troca de Kit Transmissão Bros 160', description: 'Corrente com retentor e dentes gastos', budget: 'R$ 190,00 - R$ 230,00', status: 'Respondido' },
+    { id: 'COT-502', customer: 'Fernanda Lima', service: 'Revisão Sistema de Freios ABS', description: 'Civic 2019 com luz do ABS acesa', budget: 'R$ 350,00 - R$ 500,00', status: 'Aberto' }
   ]);
 
   const addQuote = (service: string, description: string, budget: string) => {
     const newQ: QuoteItem = {
-      id: `COT-${Math.floor(100 + Math.random() * 900)}`,
+      id: `COT-${Math.floor(500 + Math.random() * 500)}`,
+      customer: 'Você (Usuário)',
       service,
       description,
       budget,
@@ -137,21 +136,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setQuotes((prev) => [newQ, ...prev]);
   };
 
-  const addLevaETraz = (vehicle: string, pickupAddress: string, workshop: string) => {
-    const newLT: LevaETrazItem = {
-      id: `LT-${Math.floor(100 + Math.random() * 900)}`,
-      vehicle,
-      pickupAddress,
-      workshop,
-      status: 'Agendado'
-    };
-    setLevaETrazList((prev) => [newLT, ...prev]);
-  };
-
   const loginAdmin = (pass: string) => {
     if (pass === 'admin123' || pass === 'master2026') {
       setIsAdminAuthenticated(true);
-      setRole('admin');
+      setViewMode('admin_control_pro');
       return true;
     }
     return false;
@@ -159,6 +147,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logoutAdmin = () => {
     setIsAdminAuthenticated(false);
+    setViewMode('public');
     setRole('cliente');
   };
 
@@ -167,13 +156,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         role,
         setRole,
+        viewMode,
+        setViewMode,
         cartCount,
         setCartCount,
         orders,
         quotes,
-        levaETrazList,
         addQuote,
-        addLevaETraz,
         isAdminAuthenticated,
         loginAdmin,
         logoutAdmin
@@ -191,51 +180,42 @@ export const useApp = () => {
 };
 
 // ============================================================================
-// MODAL DE STATUS DO SUPABASE
+// BARRA DE MUDANÇA RÁPIDA DE VISÃO (TOP NAVIGATION SWITCHER)
 // ============================================================================
-const SupabaseModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
+const EnvironmentSwitcher: React.FC = () => {
+  const { viewMode, setViewMode, role, setRole } = useApp();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-700/60 rounded-3xl shadow-2xl p-6 text-slate-100 space-y-5">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400">
-              <Database className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-base tracking-tight text-white">Cluster Supabase</h3>
-              <p className="text-[11px] text-cyan-400 font-semibold">Serra da Ibiapaba • PostgreSQL</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <div className="bg-slate-950 border-b border-slate-800 text-xs px-4 py-2 flex flex-wrap items-center justify-between gap-2 shadow-lg z-50 sticky top-0">
+      <div className="flex items-center gap-2">
+        <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+        <span className="font-extrabold text-white tracking-wide">IbiapabaExpress Pro</span>
+        <span className="text-[10px] text-slate-400 hidden sm:inline">• Serra da Ibiapaba (CE)</span>
+      </div>
 
-        <div className="space-y-3">
-          <div className={`p-4 rounded-2xl border flex items-center gap-3.5 ${isSupabaseConfigured ? 'bg-emerald-950/50 border-emerald-500/50 text-emerald-200' : 'bg-amber-950/50 border-amber-500/50 text-amber-200'}`}>
-            {isSupabaseConfigured ? <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0" />}
-            <div>
-              <p className="font-bold text-sm">{isSupabaseConfigured ? 'Conexão Supabase Ativa' : 'Modo Preview / Local Mock'}</p>
-              <p className="text-xs opacity-80 leading-relaxed">{isSupabaseConfigured ? 'Variáveis VITE_SUPABASE_URL e KEY sincronizadas com sucesso.' : 'O sistema está em modo fallback com dados simulados para navegação fluida.'}</p>
-            </div>
-          </div>
+      <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+        <button
+          onClick={() => setViewMode('public')}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-[11px] transition ${
+            viewMode === 'public'
+              ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Zap className="w-3.5 h-3.5" />
+          <span>App Público</span>
+        </button>
 
-          <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2 text-xs font-mono">
-            <div className="flex justify-between items-center text-slate-400">
-              <span>VITE_SUPABASE_URL:</span>
-              <span className={supabaseUrl ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>{supabaseUrl ? 'ONLINE' : 'AUSENTE'}</span>
-            </div>
-            <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 break-all text-[11px]">
-              {supabaseUrl || 'https://seu-projeto-ibiapaba.supabase.co'}
-            </div>
-          </div>
-        </div>
-
-        <button onClick={onClose} className="w-full py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-extrabold text-xs shadow-lg shadow-violet-600/30 hover:opacity-95 transition">
-          Concluir Visualização
+        <button
+          onClick={() => setViewMode('admin_control_pro')}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-[11px] transition ${
+            viewMode === 'admin_control_pro'
+              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Shield className="w-3.5 h-3.5" />
+          <span>AdminControl Pro</span>
         </button>
       </div>
     </div>
@@ -243,625 +223,405 @@ const SupabaseModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isO
 };
 
 // ============================================================================
-// HEADER VIBRANTE COM GRADIENTE NEON
+// PAINEL ADMINCONTROL PRO (TORRE DE CONTROLE, MÉTRICAS E OPERAÇÃO)
 // ============================================================================
-const AppHeader: React.FC<{ onOpenSupabase: () => void; onOpenAdminAuth: () => void }> = ({ onOpenSupabase, onOpenAdminAuth }) => {
-  const { role, cartCount } = useApp();
+const AdminControlProView: React.FC = () => {
+  const { orders, quotes, logoutAdmin } = useApp();
+  const [activeTab, setActiveTab] = useState<'kpis' | 'pedidos' | 'cotacoes' | 'usuarios'>('kpis');
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-slate-950/90 backdrop-blur-md border-b border-violet-500/20 px-4 py-3 shadow-xl">
-      <div className="max-w-md mx-auto flex items-center justify-between">
-        {/* Marca / Logo Super App */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 p-0.5 shadow-lg shadow-violet-500/30 flex items-center justify-center">
-            <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-              <Zap className="w-5 h-5 text-fuchsia-400 fill-fuchsia-400/20" />
-            </div>
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-4 sm:p-6 space-y-6 pb-20">
+      {/* Topo do AdminControl Pro */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/90 p-5 rounded-3xl border border-cyan-500/30 shadow-2xl backdrop-blur-md">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20">
+            <Activity className="w-7 h-7" />
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="font-black text-base tracking-tight bg-gradient-to-r from-white via-slate-100 to-fuchsia-200 bg-clip-text text-transparent">
-                Ibiapaba<span className="text-fuchsia-500">Express</span>
-              </h1>
-              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-fuchsia-500/20 border border-fuchsia-500/40 text-fuchsia-300">
-                PRO
+            <div className="flex items-center gap-2">
+              <h1 className="font-black text-lg text-white">AdminControl Pro</h1>
+              <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-extrabold text-[10px] border border-cyan-500/40">
+                Torre de Controle
               </span>
             </div>
-            <p className="text-[10px] text-cyan-400 font-semibold flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-cyan-400" /> Tianguá, Ubajara, Viçosa & Região
-            </p>
+            <p className="text-xs text-slate-400 mt-0.5">Métricas globais, leilões e logística em tempo real</p>
           </div>
         </div>
 
-        {/* Botões de Ação Topo */}
-        <div className="flex items-center gap-2">
-          <button onClick={onOpenSupabase} className="p-2 rounded-xl bg-slate-900 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 transition shadow-sm" title="Status Supabase">
-            <Database className="w-4 h-4" />
-          </button>
+        <button
+          onClick={logoutAdmin}
+          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2 rounded-2xl bg-red-950/80 hover:bg-red-900 text-red-300 font-bold text-xs border border-red-800/50 transition shadow-md"
+        >
+          <LogOut className="w-4 h-4" /> Encerrar Sessão Master
+        </button>
+      </div>
 
-          <button onClick={onOpenAdminAuth} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-extrabold text-xs shadow-md shadow-violet-600/30 transition border border-violet-400/30">
-            <Lock className="w-3.5 h-3.5" />
-            <span>Admin</span>
-          </button>
+      {/* Grid de KPIs Principais */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="bg-slate-900/80 p-4 rounded-3xl border border-slate-800 space-y-1">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+            <span>GMV Processado</span>
+            <DollarSign className="w-4 h-4 text-emerald-400" />
+          </div>
+          <p className="text-xl font-black text-emerald-400">R$ 54.890,00</p>
+          <p className="text-[10px] text-emerald-500 flex items-center gap-0.5 font-bold">
+            <ArrowUpRight className="w-3 h-3" /> +18.4% este mês
+          </p>
+        </div>
+
+        <div className="bg-slate-900/80 p-4 rounded-3xl border border-slate-800 space-y-1">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+            <span>Pedidos Ativos</span>
+            <Package className="w-4 h-4 text-cyan-400" />
+          </div>
+          <p className="text-xl font-black text-cyan-400">{orders.length} operando</p>
+          <p className="text-[10px] text-cyan-500 font-bold">Tianguá, Ubajara & Viçosa</p>
+        </div>
+
+        <div className="bg-slate-900/80 p-4 rounded-3xl border border-slate-800 space-y-1">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+            <span>Leilões de Cotações</span>
+            <Wrench className="w-4 h-4 text-fuchsia-400" />
+          </div>
+          <p className="text-xl font-black text-fuchsia-400">{quotes.length} ativas</p>
+          <p className="text-[10px] text-fuchsia-400 font-bold">Taxa de resposta: 92%</p>
+        </div>
+
+        <div className="bg-slate-900/80 p-4 rounded-3xl border border-slate-800 space-y-1">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+            <span>Leva e Traz</span>
+            <Bike className="w-4 h-4 text-amber-400" />
+          </div>
+          <p className="text-xl font-black text-amber-400">18 corridas hoje</p>
+          <p className="text-[10px] text-amber-500 font-bold">Frota 100% alocada</p>
         </div>
       </div>
-    </header>
+
+      {/* Gráfico Visual de Operações */}
+      <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-cyan-400" /> Volume Operacional por Cidade (Ibiapaba)
+          </h3>
+          <span className="text-[10px] font-bold text-slate-400">Atualizado ao vivo</span>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <div>
+            <div className="flex justify-between text-xs font-bold mb-1">
+              <span className="text-slate-300">Tianguá (Polo Principal)</span>
+              <span className="text-cyan-400">45% do volume</span>
+            </div>
+            <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full" style={{ width: '45%' }} />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-xs font-bold mb-1">
+              <span className="text-slate-300">Ubajara & Viçosa</span>
+              <span className="text-fuchsia-400">30% do volume</span>
+            </div>
+            <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-fuchsia-500 to-pink-600 rounded-full" style={{ width: '30%' }} />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-xs font-bold mb-1">
+              <span className="text-slate-300">Ibiapina, São Benedito & Guaraciaba</span>
+              <span className="text-amber-400">25% do volume</span>
+            </div>
+            <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-amber-500 to-orange-600 rounded-full" style={{ width: '25%' }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabela de Gestão de Pedidos em Tempo Real */}
+      <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+            <Layers className="w-4 h-4 text-fuchsia-400" /> Monitoramento em Tempo Real
+          </h3>
+          <span className="text-[11px] font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2.5 py-1 rounded-xl border border-fuchsia-500/30">
+            {orders.length} Registros
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-300">
+            <thead className="bg-slate-950 text-slate-400 font-black uppercase text-[10px] tracking-wider">
+              <tr>
+                <th className="p-3 rounded-l-xl">ID / Cliente</th>
+                <th className="p-3">Oficina / Lojista</th>
+                <th className="p-3">Categoria</th>
+                <th className="p-3">Valor</th>
+                <th className="p-3 rounded-r-xl">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60 font-medium">
+              {orders.map((o) => (
+                <tr key={o.id} className="hover:bg-slate-800/40 transition">
+                  <td className="p-3">
+                    <p className="font-bold text-white">{o.id}</p>
+                    <p className="text-[10px] text-slate-400">{o.customer}</p>
+                  </td>
+                  <td className="p-3 text-slate-300">{o.store}</td>
+                  <td className="p-3">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-800 text-[10px] font-bold text-slate-300">
+                      {o.type}
+                    </span>
+                  </td>
+                  <td className="p-3 font-extrabold text-emerald-400">R$ {o.price.toFixed(2)}</td>
+                  <td className="p-3">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
+                      o.status === 'Entregue'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : o.status === 'Em Trânsito'
+                        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    }`}>
+                      {o.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 };
 
 // ============================================================================
-// VISÃO DO CLIENTE (DESIGN ESTILOSO & IMPACTANTE)
+// REACT APP ARCHITECT: SUPER APP PÚBLICO (CLIENTE, COMÉRCIO E ENTREGADOR)
 // ============================================================================
-const CustomerView: React.FC = () => {
-  const { setCartCount, quotes, addQuote, levaETrazList, addLevaETraz } = useApp();
-  const [activeTab, setActiveTab] = useState<'lojas' | 'cotacoes' | 'levaETraz' | 'indique'>('lojas');
+const ReactAppArchitectPublicView: React.FC = () => {
+  const { role, setRole, cartCount, setCartCount, quotes, addQuote } = useApp();
+  const [customerTab, setCustomerTab] = useState<'lojas' | 'cotacoes' | 'levaETraz'>('lojas');
 
-  // Forms
   const [serviceInput, setServiceInput] = useState('');
   const [descInput, setDescInput] = useState('');
-
-  const [vehicleInput, setVehicleInput] = useState('');
-  const [addressInput, setAddressInput] = useState('');
-  const [workshopInput, setWorkshopInput] = useState('AutoPeças & Mecânica Tianguá');
 
   const stores: StoreItem[] = [
     {
       id: '1',
       name: 'AutoPeças & Mecânica Tianguá',
-      category: 'Mecânica, Óleo & Acessórios',
+      category: 'Mecânica, Óleo & Peças',
       rating: 4.9,
       deliveryTime: '20-30 min',
       deliveryFee: 5.0,
       city: 'Tianguá - Centro',
-      badge: 'Super Parceiro',
+      badge: 'Mais Vendido',
       image: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=500&auto=format&fit=crop&q=80'
     },
     {
       id: '2',
       name: 'Centro Automotivo Ibiapina',
-      category: 'Injeção, Freios & Suspensão',
+      category: 'Injeção & Suspensão',
       rating: 4.8,
       deliveryTime: '25-40 min',
       deliveryFee: 7.0,
       city: 'Ibiapina',
-      badge: 'Destaque',
+      badge: 'Recomendado',
       image: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?w=500&auto=format&fit=crop&q=80'
     },
     {
       id: '3',
-      name: 'Ubajara MotoPeças & Oficina 24h',
-      category: 'Peças de Moto & Socorro',
+      name: 'Ubajara MotoPeças & Oficina',
+      category: 'Peças para Moto',
       rating: 5.0,
       deliveryTime: '15-25 min',
       deliveryFee: 4.5,
       city: 'Ubajara',
-      badge: '24 Horas',
+      badge: 'Atendimento 24h',
       image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&auto=format&fit=crop&q=80'
     }
   ];
 
-  const handleCreateQuote = (e: React.FormEvent) => {
+  const handleSendQuote = (e: React.FormEvent) => {
     e.preventDefault();
     if (!serviceInput) return;
-    addQuote(serviceInput, descInput || 'Solicitação urgente via App', 'Aguardando propostas');
+    addQuote(serviceInput, descInput || 'Solicitado via Super App', 'Em análise pelas oficinas');
     setServiceInput('');
     setDescInput('');
-    alert('🚀 Cotação enviada! As oficinas parceiras da Serra da Ibiapaba foram notificadas.');
-  };
-
-  const handleCreateLevaETraz = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!vehicleInput || !addressInput) return;
-    addLevaETraz(vehicleInput, addressInput, workshopInput);
-    setVehicleInput('');
-    setAddressInput('');
-    alert('🛵 Solicitação de Leva e Traz registrada! O entregador buscará seu veículo no endereço fornecido.');
+    alert('Cotação enviada! As oficinas parceiras enviarão propostas em instantes.');
   };
 
   return (
-    <div className="space-y-5 pb-24">
-      {/* Banner Principal Promocional */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-900 via-slate-900 to-fuchsia-950 p-5 border border-violet-500/30 shadow-2xl">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 space-y-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-fuchsia-500 text-slate-950 font-black text-[10px] tracking-wider uppercase shadow-md">
-            <Sparkles className="w-3 h-3" /> Super App Regional
-          </span>
-          <h2 className="text-xl font-black text-white leading-tight">
-            Tudo para seu Veículo na <span className="bg-gradient-to-r from-cyan-400 to-fuchsia-400 bg-clip-text text-transparent">Serra da Ibiapaba</span>
-          </h2>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Peças, mecânicos credenciados, leilão de preços e serviço exclusivo <strong className="text-fuchsia-400">Leva e Traz</strong> na sua porta.
-          </p>
-        </div>
-      </div>
-
-      {/* Menu de Abas Estilosas com Efeito Glowing */}
-      <div className="grid grid-cols-4 gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 shadow-inner">
-        <button
-          onClick={() => setActiveTab('lojas')}
-          className={`flex flex-col items-center gap-1 py-2 rounded-xl text-[11px] font-extrabold transition-all ${
-            activeTab === 'lojas'
-              ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/30'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Store className="w-4 h-4" />
-          <span>Lojas</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('cotacoes')}
-          className={`flex flex-col items-center gap-1 py-2 rounded-xl text-[11px] font-extrabold transition-all ${
-            activeTab === 'cotacoes'
-              ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/30'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Wrench className="w-4 h-4" />
-          <span>Cotações</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('levaETraz')}
-          className={`flex flex-col items-center gap-1 py-2 rounded-xl text-[11px] font-extrabold transition-all ${
-            activeTab === 'levaETraz'
-              ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/30'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Bike className="w-4 h-4" />
-          <span>Leva/Traz</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('indique')}
-          className={`flex flex-col items-center gap-1 py-2 rounded-xl text-[11px] font-extrabold transition-all ${
-            activeTab === 'indique'
-              ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/30'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Gift className="w-4 h-4" />
-          <span>Indique</span>
-        </button>
-      </div>
-
-      {/* CONTEÚDO DA ABA 1: LOJAS & OFICINAS */}
-      {activeTab === 'lojas' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <Zap className="w-3.5 h-3.5 text-fuchsia-400" /> Oficinas & Autopeças Destaque
-            </h3>
-            <span className="text-[11px] text-cyan-400 font-bold">{stores.length} Ativas</span>
+    <div className="max-w-md mx-auto bg-slate-950 min-h-screen text-slate-100 flex flex-col font-sans pb-24 border-x border-slate-800 shadow-2xl">
+      {/* Header do App Público */}
+      <header className="p-4 bg-slate-900/90 border-b border-slate-800 backdrop-blur-md sticky top-[41px] z-40 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 p-0.5 flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-fuchsia-400">
+              IE
+            </div>
           </div>
-
-          <div className="space-y-3.5">
-            {stores.map((s) => (
-              <div
-                key={s.id}
-                className="group relative bg-slate-900/90 rounded-3xl p-3.5 border border-slate-800 hover:border-violet-500/50 transition-all duration-300 shadow-xl flex items-center gap-3.5 overflow-hidden"
-              >
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-slate-700/50">
-                  <img src={s.image} alt={s.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  {s.badge && (
-                    <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-fuchsia-600 text-white text-[9px] font-black">
-                      {s.badge}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0 space-y-1">
-                  <h4 className="font-extrabold text-sm text-white truncate">{s.name}</h4>
-                  <p className="text-xs text-slate-400 truncate">{s.category}</p>
-                  
-                  <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-300 pt-0.5">
-                    <span className="flex items-center gap-0.5 text-amber-400 font-bold">
-                      <Star className="w-3 h-3 fill-amber-400" /> {s.rating}
-                    </span>
-                    <span className="text-slate-600">•</span>
-                    <span className="text-cyan-300">{s.deliveryTime}</span>
-                    <span className="text-slate-600">•</span>
-                    <span className="text-emerald-400">R$ {s.deliveryFee.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setCartCount((prev) => prev + 1);
-                    alert(`Item de "${s.name}" adicionado ao carrinho!`);
-                  }}
-                  className="p-2.5 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold shadow-lg shadow-violet-600/30 transition active:scale-95"
-                  title="Adicionar ao Carrinho"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
+          <div>
+            <h2 className="font-extrabold text-sm text-white leading-none">IbiapabaExpress</h2>
+            <p className="text-[10px] text-cyan-400 font-semibold mt-0.5 flex items-center gap-1">
+              <MapPin className="w-3 h-3 text-cyan-400" /> Tianguá & Região
+            </p>
           </div>
         </div>
-      )}
 
-      {/* CONTEÚDO DA ABA 2: COTAÇÃO / LEILÃO */}
-      {activeTab === 'cotacoes' && (
-        <div className="space-y-4">
-          <form onSubmit={handleCreateQuote} className="bg-slate-900/90 p-5 rounded-3xl border border-violet-500/30 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2.5 text-fuchsia-400 font-extrabold text-sm">
-              <div className="p-2 rounded-xl bg-fuchsia-500/20 border border-fuchsia-500/40">
-                <Wrench className="w-4 h-4" />
-              </div>
-              <span>Leilão Reverso de Preços (Mecânica)</span>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <ShoppingBag className="w-5 h-5 text-slate-300" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-fuchsia-500 text-white font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Conteúdo dinâmico por Papel (Cliente, Comércio, Entregador) */}
+      <main className="p-4 space-y-4 flex-1">
+        {role === 'cliente' && (
+          <>
+            {/* Banner Promocional */}
+            <div className="bg-gradient-to-r from-violet-900 via-slate-900 to-fuchsia-900 p-4 rounded-3xl border border-violet-500/30 space-y-2 shadow-xl">
+              <span className="px-2.5 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-300 font-black text-[9px] border border-fuchsia-500/40 uppercase">
+                Leilão de Preços
+              </span>
+              <h3 className="font-black text-base text-white">Economize na Manutenção do seu Veículo</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Envie o que precisa e receba orçamentos de diversas oficinas da Serra da Ibiapaba.
+              </p>
             </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1">Qual o serviço ou peça que precisa?</label>
+            {/* Abas Internas */}
+            <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800 text-xs font-bold">
+              <button
+                onClick={() => setCustomerTab('lojas')}
+                className={`py-2 rounded-xl transition ${customerTab === 'lojas' ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white' : 'text-slate-400'}`}
+              >
+                Parceiros
+              </button>
+              <button
+                onClick={() => setCustomerTab('cotacoes')}
+                className={`py-2 rounded-xl transition ${customerTab === 'cotacoes' ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white' : 'text-slate-400'}`}
+              >
+                Cotações
+              </button>
+              <button
+                onClick={() => setCustomerTab('levaETraz')}
+                className={`py-2 rounded-xl transition ${customerTab === 'levaETraz' ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white' : 'text-slate-400'}`}
+              >
+                Leva e Traz
+              </button>
+            </div>
+
+            {customerTab === 'lojas' && (
+              <div className="space-y-3">
+                {stores.map((s) => (
+                  <div key={s.id} className="bg-slate-900/90 rounded-3xl p-3 border border-slate-800 shadow-xl flex items-center gap-3">
+                    <img src={s.image} alt={s.name} className="w-16 h-16 rounded-2xl object-cover shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-extrabold text-xs text-white truncate">{s.name}</h4>
+                      <p className="text-[11px] text-slate-400">{s.category}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-300 mt-1 font-semibold">
+                        <span className="text-amber-400 font-bold flex items-center gap-0.5"><Star className="w-3 h-3 fill-amber-400" />{s.rating}</span>
+                        <span>• {s.deliveryTime}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setCartCount((prev) => prev + 1)}
+                      className="p-2 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-500 transition"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {customerTab === 'cotacoes' && (
+              <form onSubmit={handleSendQuote} className="bg-slate-900 p-4 rounded-3xl border border-slate-800 space-y-3">
+                <h4 className="font-extrabold text-xs text-white flex items-center gap-1.5">
+                  <Wrench className="w-4 h-4 text-fuchsia-400" /> Nova Cotação / Pedido de Peça
+                </h4>
                 <input
                   type="text"
-                  placeholder="Ex: Troca de pastilhas de freio Civic 2018"
+                  placeholder="Ex: Troca de pastilhas de freio Moto Bros 160"
                   value={serviceInput}
                   onChange={(e) => setServiceInput(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-fuchsia-500"
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white"
                   required
                 />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1">Detalhes do veículo / Especificações</label>
                 <textarea
-                  placeholder="Descreva o ano, modelo ou sintoma do problema..."
+                  placeholder="Observações ou ano do veículo..."
                   value={descInput}
                   onChange={(e) => setDescInput(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-fuchsia-500"
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white"
                   rows={2}
                 />
+                <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-black text-xs">
+                  Disparar Cotação
+                </button>
+              </form>
+            )}
+
+            {customerTab === 'levaETraz' && (
+              <div className="bg-slate-900 p-4 rounded-3xl border border-slate-800 space-y-3 text-xs">
+                <h4 className="font-extrabold text-white flex items-center gap-1.5">
+                  <Bike className="w-4 h-4 text-cyan-400" /> Coleta e Devolução de Veículos
+                </h4>
+                <p className="text-slate-400 leading-relaxed">
+                  Buscamos sua moto ou carro no seu endereço e levamos até a oficina credenciada.
+                </p>
+                <button onClick={() => alert('Coleta agendada!')} className="w-full py-2.5 rounded-xl bg-cyan-600 text-white font-black">
+                  Agendar Coleta
+                </button>
               </div>
-            </div>
+            )}
+          </>
+        )}
 
-            <button
-              type="submit"
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-amber-500 text-white font-extrabold text-xs shadow-lg shadow-fuchsia-600/30 hover:opacity-95 transition"
-            >
-              Disparar Cotação para Oficinas
-            </button>
-          </form>
-
-          {/* Histórico de Cotações */}
-          <div className="space-y-2.5">
-            <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">Suas Cotações Ativas</h4>
-            {quotes.map((q) => (
-              <div key={q.id} className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
-                <div className="flex items-center justify-between font-extrabold text-white">
-                  <span>{q.service}</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${q.status === 'Respondido' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-amber-500/20 border-amber-500/40 text-amber-300'}`}>
-                    {q.status}
-                  </span>
-                </div>
-                <p className="text-slate-400 leading-relaxed">{q.description}</p>
-                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-slate-300">
-                  <span>Proposta estimada:</span>
-                  <span className="font-extrabold text-fuchsia-400">{q.budget}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* CONTEÚDO DA ABA 3: LEVA E TRAZ DE VEÍCULOS */}
-      {activeTab === 'levaETraz' && (
-        <div className="space-y-4">
-          <form onSubmit={handleCreateLevaETraz} className="bg-slate-900/90 p-5 rounded-3xl border border-cyan-500/30 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2.5 text-cyan-400 font-extrabold text-sm">
-              <div className="p-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40">
-                <Bike className="w-4 h-4" />
-              </div>
-              <span>Agendar Leva e Traz na Porta</span>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Não tem tempo de ir à oficina? Nosso entregador credenciado busca o seu veículo na sua casa/trabalho e devolve revisado!
-            </p>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1">Modelo do Veículo / Placa</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Honda Bros 160 Vermelha - Placa XXX-0000"
-                  value={vehicleInput}
-                  onChange={(e) => setVehicleInput(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1">Endereço Completo de Coleta</label>
-                <input
-                  type="text"
-                  placeholder="Rua, número, bairro e cidade na Serra"
-                  value={addressInput}
-                  onChange={(e) => setAddressInput(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1">Oficina Destino</label>
-                <select
-                  value={workshopInput}
-                  onChange={(e) => setWorkshopInput(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-500"
-                >
-                  <option value="AutoPeças & Mecânica Tianguá">AutoPeças & Mecânica Tianguá</option>
-                  <option value="Centro Automotivo Ibiapina">Centro Automotivo Ibiapina</option>
-                  <option value="Ubajara MotoPeças & Oficina 24h">Ubajara MotoPeças & Oficina 24h</option>
-                </select>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/30 hover:opacity-95 transition"
-            >
-              Solicitar Motoboy Leva e Traz
-            </button>
-          </form>
-
-          {/* Lista de Leva e Traz */}
-          <div className="space-y-2.5">
-            <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">Histórico de Coletas</h4>
-            {levaETrazList.map((lt) => (
-              <div key={lt.id} className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
-                <div className="flex items-center justify-between font-extrabold text-white">
-                  <span>{lt.vehicle}</span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-[10px] font-black">
-                    {lt.status}
-                  </span>
-                </div>
-                <p className="text-slate-400"><strong>Coleta:</strong> {lt.pickupAddress}</p>
-                <p className="text-slate-400"><strong>Destino:</strong> {lt.workshop}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* CONTEÚDO DA ABA 4: PROGRAMA INDIQUE E GANHE */}
-      {activeTab === 'indique' && (
-        <div className="bg-slate-900/90 p-5 rounded-3xl border border-amber-500/30 shadow-2xl space-y-4 text-center">
-          <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-amber-500 to-fuchsia-600 p-0.5 mx-auto shadow-lg shadow-amber-500/20 flex items-center justify-center">
-            <div className="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center text-amber-400">
-              <Award className="w-7 h-7" />
+        {role === 'comercio' && (
+          <div className="bg-slate-900 p-4 rounded-3xl border border-slate-800 space-y-3 text-xs">
+            <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+              <Store className="w-4 h-4 text-indigo-400" /> Painel da Oficina / Lojista
+            </h3>
+            <p className="text-slate-400">Sua loja está visível para clientes de toda a Serra da Ibiapaba.</p>
+            <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 font-bold text-emerald-400">
+              Faturamento do Dia: R$ 1.250,00
             </div>
           </div>
+        )}
 
-          <div className="space-y-1">
-            <h3 className="font-extrabold text-base text-white">Indique Amigos na Serra da Ibiapaba</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Ganhe <strong className="text-amber-400">R$ 15,00 em saldo</strong> no app para cada amigo que realizar a primeira cotação ou pedido!
-            </p>
+        {role === 'entregador' && (
+          <div className="bg-slate-900 p-4 rounded-3xl border border-slate-800 space-y-3 text-xs">
+            <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+              <Bike className="w-4 h-4 text-amber-400" /> Painel do Entregador Credenciado
+            </h3>
+            <p className="text-slate-400">Você possui 2 entregas de peças e 1 corrida Leva e Traz em aberto.</p>
+            <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 font-bold text-cyan-400">
+              Ganhos Previstos: R$ 120,00
+            </div>
           </div>
-
-          <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex items-center justify-between text-xs">
-            <span className="font-mono text-fuchsia-400 font-bold">IBIAPABA-EXPRESS-2026</span>
-            <button
-              onClick={() => alert('Código de Indicação copiado!')}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition"
-            >
-              Copiar
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ============================================================================
-// VISÃO DO LOJISTA / OFICINA
-// ============================================================================
-const MerchantView: React.FC = () => (
-  <div className="space-y-5 pb-24">
-    <div className="bg-slate-900/90 p-5 rounded-3xl border border-indigo-500/30 shadow-2xl space-y-3">
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-400">
-          <Store className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="font-extrabold text-base text-white">Painel da Oficina / Lojista</h2>
-          <p className="text-xs text-slate-400">Gestão de Peças, Pedidos & Cotações Recebidas</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 pt-2">
-        <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
-          <p className="text-[11px] text-slate-400 font-medium">Pedidos Hoje</p>
-          <p className="text-lg font-black text-indigo-400">12 chamados</p>
-        </div>
-        <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
-          <p className="text-[11px] text-slate-400 font-medium">Faturamento Estimado</p>
-          <p className="text-lg font-black text-emerald-400">R$ 1.840,00</p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// ============================================================================
-// VISÃO DO ENTREGADOR
-// ============================================================================
-const CourierView: React.FC = () => (
-  <div className="space-y-5 pb-24">
-    <div className="bg-slate-900/90 p-5 rounded-3xl border border-amber-500/30 shadow-2xl space-y-3">
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400">
-          <Bike className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="font-extrabold text-base text-white">Painel do Entregador</h2>
-          <p className="text-xs text-slate-400">Rotas de Entrega & Corridas Leva e Traz</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 pt-2">
-        <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
-          <p className="text-[11px] text-slate-400 font-medium">Coletas Ativas</p>
-          <p className="text-lg font-black text-amber-400">3 rotas</p>
-        </div>
-        <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
-          <p className="text-[11px] text-slate-400 font-medium">Ganhos do Dia</p>
-          <p className="text-lg font-black text-emerald-400">R$ 145,00</p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// ============================================================================
-// PAINEL ADMINISTRADOR MASTER (PROTEGIDO)
-// ============================================================================
-const MasterAdminDashboard: React.FC = () => {
-  const { logoutAdmin } = useApp();
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 space-y-6 pb-20">
-      <div className="flex items-center justify-between bg-slate-900/90 p-4 rounded-3xl border border-violet-500/30 shadow-2xl">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-violet-500/20 border border-violet-500/40 text-violet-400">
-            <Shield className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="font-extrabold text-base text-white">Administrador Master</h2>
-            <p className="text-xs text-slate-400">Controle Plataforma IbiapabaExpress</p>
-          </div>
-        </div>
-        <button
-          onClick={logoutAdmin}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-red-950/80 hover:bg-red-900 text-red-300 font-bold text-xs border border-red-800/50 transition"
-        >
-          <LogOut className="w-4 h-4" /> Sair
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 space-y-1">
-          <p className="text-xs text-slate-400 font-medium">GMV Total Processado</p>
-          <p className="text-xl font-black text-emerald-400">R$ 48.920,00</p>
-        </div>
-        <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 space-y-1">
-          <p className="text-xs text-slate-400 font-medium">Corridas Leva e Traz</p>
-          <p className="text-xl font-black text-cyan-400">312 concluídas</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ============================================================================
-// MODAL DE AUTENTICAÇÃO DO ADMIN MASTER
-// ============================================================================
-const AdminAuthModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const { loginAdmin } = useApp();
-  const [pass, setPass] = useState('');
-  const [error, setError] = useState(false);
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loginAdmin(pass)) {
-      setError(false);
-      setPass('');
-      onClose();
-    } else {
-      setError(true);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
-      <div className="w-full max-w-xs bg-slate-900 border border-slate-800 rounded-3xl p-6 text-white space-y-4 shadow-2xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Lock className="w-5 h-5 text-fuchsia-400" />
-            <h3 className="font-extrabold text-sm">Painel Restrito Admin</h3>
-          </div>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-800">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="text-[11px] text-slate-400 block mb-1">Senha de Acesso Master:</label>
-            <input
-              type="password"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-              placeholder="Digite admin123..."
-              className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-fuchsia-500"
-              autoFocus
-              required
-            />
-          </div>
-
-          {error && <p className="text-xs text-red-400 font-bold">Senha incorreta. Tente "admin123".</p>}
-
-          <button
-            type="submit"
-            className="w-full py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 font-extrabold text-xs transition shadow-lg shadow-violet-600/30"
-          >
-            Autenticar
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-// ============================================================================
-// CONTEÚDO PRINCIPAL DO APP
-// ============================================================================
-const MainContent: React.FC = () => {
-  const { role, setRole, isAdminAuthenticated } = useApp();
-  const [supabaseOpen, setSupabaseOpen] = useState(false);
-  const [adminAuthOpen, setAdminAuthOpen] = useState(false);
-
-  if (role === 'admin' && isAdminAuthenticated) {
-    return <MasterAdminDashboard />;
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <AppHeader onOpenSupabase={() => setSupabaseOpen(true)} onOpenAdminAuth={() => setAdminAuthOpen(true)} />
-
-      <main className="flex-1 max-w-md w-full mx-auto p-4">
-        {role === 'cliente' && <CustomerView />}
-        {role === 'comercio' && <MerchantView />}
-        {role === 'entregador' && <CourierView />}
+        )}
       </main>
 
-      {/* Navegação Inferior (Mobile Bar Glassmorphism) */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-950/90 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex items-center justify-between z-40 shadow-2xl">
+      {/* Navegação Inferior de Perfis do App */}
+      <nav className="fixed bottom-0 max-w-md w-full bg-slate-950/90 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex items-center justify-between z-40">
         <button
           onClick={() => setRole('cliente')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-extrabold transition ${
-            role === 'cliente' ? 'text-fuchsia-400' : 'text-slate-500 hover:text-slate-300'
-          }`}
+          className={`flex flex-col items-center gap-1 text-[10px] font-extrabold ${role === 'cliente' ? 'text-fuchsia-400' : 'text-slate-500'}`}
         >
           <Home className="w-5 h-5" />
-          <span>Início</span>
+          <span>Cliente</span>
         </button>
 
         <button
           onClick={() => setRole('comercio')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-extrabold transition ${
-            role === 'comercio' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'
-          }`}
+          className={`flex flex-col items-center gap-1 text-[10px] font-extrabold ${role === 'comercio' ? 'text-indigo-400' : 'text-slate-500'}`}
         >
           <Store className="w-5 h-5" />
           <span>Lojista</span>
@@ -869,28 +629,34 @@ const MainContent: React.FC = () => {
 
         <button
           onClick={() => setRole('entregador')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-extrabold transition ${
-            role === 'entregador' ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'
-          }`}
+          className={`flex flex-col items-center gap-1 text-[10px] font-extrabold ${role === 'entregador' ? 'text-amber-400' : 'text-slate-500'}`}
         >
           <Bike className="w-5 h-5" />
           <span>Entregador</span>
         </button>
       </nav>
-
-      <SupabaseModal isOpen={supabaseOpen} onClose={() => setSupabaseOpen(false)} />
-      <AdminAuthModal isOpen={adminAuthOpen} onClose={() => setAdminAuthOpen(false)} />
     </div>
   );
 };
 
 // ============================================================================
-// COMPONENTE RAIZ (EXPORT DEFAULT APP)
+// COMPONENTE RAIZ
 // ============================================================================
+const MainShell: React.FC = () => {
+  const { viewMode } = useApp();
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      <EnvironmentSwitcher />
+      {viewMode === 'admin_control_pro' ? <AdminControlProView /> : <ReactAppArchitectPublicView />}
+    </div>
+  );
+};
+
 export default function App() {
   return (
     <AppProvider>
-      <MainContent />
+      <MainShell />
     </AppProvider>
   );
 }
