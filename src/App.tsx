@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 // Cidades da Serra da Ibiapaba
 const CITIES = ['Tianguá', 'Ubajara', 'Viçosa do Ceará', 'São Benedito', 'Guaraciaba do Norte', 'Ibiapina', 'Carnaubal', 'Croatá', 'Ipu'];
 
-// Filtros por Categoria Expandidos
+// Filtros por Categoria
 const CATEGORIES = [
   'Todos',
   'Marmitas',
@@ -11,17 +11,17 @@ const CATEGORIES = [
   'Doces & Licores',
   'Roupas & Moda',
   'Produtos Gerais',
-  'Autopeças',
+  'Autopeças ⚙️',
   'Assistência Técnica 🛠️'
 ];
 
 // Stories Promocionais
 const STORIES = [
+  { id: 'orcamento', title: 'Orçamentos', icon: '🧮', badge: 'Novo', color: '#8B5CF6' },
   { id: 'cupons', title: 'Cupons', icon: '🎟️', badge: 'R$ 10', color: '#EF4444' },
   { id: 'leva_traz', title: 'Leva e Traz', icon: '🛵', badge: 'Serviço', color: '#3B82F6' },
-  { id: 'auto', title: 'Autopeças', icon: '⚙️', badge: 'Rápido', color: '#6B7280' },
-  { id: 'moda', title: 'Vestuário', icon: '👕', badge: 'Nova Coleção', color: '#EC4899' },
-  { id: 'serra', title: 'Da Serra', icon: '🍓', badge: 'Locais', color: '#8B5CF6' },
+  { id: 'auto', title: 'Autopeças', icon: '⚙️', badge: 'Cotar', color: '#6B7280' },
+  { id: 'serra', title: 'Da Serra', icon: '🍓', badge: 'Locais', color: '#10B981' },
 ];
 
 interface Product {
@@ -32,8 +32,7 @@ interface Product {
   description: string;
   image: string;
   category: string;
-  soldCount?: number;
-  isService?: boolean; // Para serviços de reparo/manutenção
+  isService?: boolean;
 }
 
 interface Store {
@@ -46,7 +45,8 @@ interface Store {
   fee: number;
   logo: string;
   banner: string;
-  isPickupService?: boolean; // Sinaliza o modelo 'Leva e Traz'
+  isPickupService?: boolean;
+  hasCalculator?: boolean; // Permite calculadora de orçamento
   products: Product[];
 }
 
@@ -55,6 +55,7 @@ interface CartItem {
   store: Store;
   quantity: number;
   notes: string;
+  customQuoteDetails?: string; // Detalhes da cotação personalizada
 }
 
 const STORES: Store[] = [
@@ -76,8 +77,7 @@ const STORES: Store[] = [
         oldPrice: 52.00,
         description: 'Acompanha arroz branco, pirão e salada fresca da serra.',
         image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=400&auto=format&fit=crop&q=80',
-        category: 'Marmitas',
-        soldCount: 142
+        category: 'Marmitas'
       }
     ]
   },
@@ -89,7 +89,8 @@ const STORES: Store[] = [
     rating: 4.9,
     time: 'Coleta em até 40 min',
     fee: 0.00,
-    isPickupService: true, // LEVA E TRAZ
+    isPickupService: true,
+    hasCalculator: true, // CALCULADORA HABILITADA
     logo: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=120&auto=format&fit=crop&q=80',
     banner: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=80',
     products: [
@@ -101,37 +102,6 @@ const STORES: Store[] = [
         image: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=400&auto=format&fit=crop&q=80',
         category: 'Assistência Técnica 🛠️',
         isService: true
-      },
-      {
-        id: 202,
-        name: 'Formatagem e Limpeza de Portátil',
-        price: 90.00,
-        description: 'Recolha ao domicílio em Tianguá e Ubajara. Inclui backup e instalação de antivírus.',
-        image: 'https://images.unsplash.com/photo-1588702547923-7093a6c36452?w=400&auto=format&fit=crop&q=80',
-        category: 'Assistência Técnica 🛠️',
-        isService: true
-      }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Boutique Serra Elegante',
-    city: 'Ubajara',
-    category: 'Roupas & Moda',
-    rating: 4.8,
-    time: '20-30 min',
-    fee: 3.50,
-    logo: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=120&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=600&auto=format&fit=crop&q=80',
-    products: [
-      {
-        id: 301,
-        name: 'Casaco Frio de Tricô Serra',
-        price: 119.90,
-        oldPrice: 149.90,
-        description: 'Ideal para o clima ameno de Ubajara e Viçosa. Tamanhos P, M e G disponíveis.',
-        image: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&auto=format&fit=crop&q=80',
-        category: 'Roupas & Moda'
       }
     ]
   },
@@ -139,10 +109,11 @@ const STORES: Store[] = [
     id: 4,
     name: 'Ibiapaba Autopeças & Moto',
     city: 'São Benedito',
-    category: 'Autopeças',
+    category: 'Autopeças ⚙️',
     rating: 4.7,
     time: '30-45 min',
     fee: 5.00,
+    hasCalculator: true, // CALCULADORA HABILITADA
     logo: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=120&auto=format&fit=crop&q=80',
     banner: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?w=600&auto=format&fit=crop&q=80',
     products: [
@@ -152,36 +123,7 @@ const STORES: Store[] = [
         price: 32.00,
         description: 'Óleo mineral lubrificante de alta qualidade para carros e motos.',
         image: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400&auto=format&fit=crop&q=80',
-        category: 'Autopeças'
-      },
-      {
-        id: 402,
-        name: 'Bateria para Moto 6Ah Gel',
-        price: 185.00,
-        description: 'Pronta para uso com garantia de 12 meses do fabricante.',
-        image: 'https://images.unsplash.com/photo-1620021617242-b3021a258457?w=400&auto=format&fit=crop&q=80',
-        category: 'Autopeças'
-      }
-    ]
-  },
-  {
-    id: 5,
-    name: 'Variedades & Casa Ibiapaba',
-    city: 'Viçosa do Ceará',
-    category: 'Produtos Gerais',
-    rating: 4.9,
-    time: '15-25 min',
-    fee: 0.00,
-    logo: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=120&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop&q=80',
-    products: [
-      {
-        id: 501,
-        name: 'Carregador Rápido USB-C 20W',
-        price: 49.90,
-        description: 'Carregamento turbo compatível com iPhone e Android.',
-        image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&auto=format&fit=crop&q=80',
-        category: 'Produtos Gerais'
+        category: 'Autopeças ⚙️'
       }
     ]
   }
@@ -193,12 +135,20 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'search' | 'orders' | 'profile'>('home');
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   
-  // Modais e fluxo de compra
+  // Modal de produto e fluxo de compra
   const [modalProduct, setModalProduct] = useState<{ product: Product; store: Store } | null>(null);
   const [modalNotes, setModalNotes] = useState('');
   const [modalQty, setModalQty] = useState(1);
   const [showCheckout, setShowCheckout] = useState(false);
   const [orderTrackStatus, setOrderTrackStatus] = useState<number | null>(null);
+
+  // MODAL DA CALCULADORA DE ORÇAMENTO
+  const [showCalculator, setShowCalculator] = useState<Store | null>(null);
+  const [calcType, setCalcType] = useState('Smartphone');
+  const [calcBrand, setCalcBrand] = useState('');
+  const [calcModel, setCalcModel] = useState('');
+  const [calcIssue, setCalcIssue] = useState('Troca de Tela');
+  const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
 
   // Carrinho e Checkout
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -211,6 +161,49 @@ export default function App() {
     setModalProduct({ product, store });
     setModalNotes('');
     setModalQty(1);
+  };
+
+  const handleCalculateEstimate = () => {
+    if (!calcBrand || !calcModel) {
+      alert('Por favor, informe a marca e o modelo.');
+      return;
+    }
+    // Simulação de cálculo baseado na seleção
+    let base = 120;
+    if (calcIssue === 'Troca de Tela') base = 180;
+    if (calcIssue === 'Troca de Bateria') base = 95;
+    if (calcIssue === 'Reparo de Placa / Motor') base = 280;
+    
+    setEstimatedPrice(base);
+  };
+
+  const addCalculatedQuoteToCart = () => {
+    if (!showCalculator || !estimatedPrice) return;
+
+    const customProduct: Product = {
+      id: Date.now(),
+      name: `Orçamento Customizado: ${calcIssue} (${calcBrand} ${calcModel})`,
+      price: estimatedPrice,
+      description: `Tipo: ${calcType} | Marca/Modelo: ${calcBrand} ${calcModel} | Serviço: ${calcIssue}`,
+      image: showCalculator.category.includes('Autopeças') 
+        ? 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=400&auto=format&fit=crop&q=80'
+        : 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&auto=format&fit=crop&q=80',
+      category: showCalculator.category,
+      isService: true
+    };
+
+    setCart(prev => [...prev, {
+      product: customProduct,
+      store: showCalculator,
+      quantity: 1,
+      notes: `Orçamento estimado gerado via app para ${calcBrand} ${calcModel}`,
+      customQuoteDetails: `${calcType} - ${calcBrand} ${calcModel} (${calcIssue})`
+    }]);
+
+    setShowCalculator(null);
+    setEstimatedPrice(null);
+    setCalcBrand('');
+    setCalcModel('');
   };
 
   const confirmAddToCart = () => {
@@ -310,9 +303,9 @@ export default function App() {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
-                { step: 1, title: cart[0]?.store.isPickupService ? 'Solicitação Aceite' : 'Pedido Confirmado', desc: 'A loja/empresa recebeu o seu pedido' },
-                { step: 2, title: cart[0]?.store.isPickupService ? 'Estafeta em Cursão para Recolha' : 'Em Preparação / Separação', desc: cart[0]?.store.isPickupService ? 'O estafeta está a caminho do seu endereço para recolher o item' : 'Os itens estão a ser preparados' },
-                { step: 3, title: cart[0]?.store.isPickupService ? 'Na Assistência em Reparo' : 'Saiu para Entrega', desc: cart[0]?.store.isPickupService ? 'Equipamento a ser analisado na oficina' : 'O estafeta está a caminho do seu endereço' },
+                { step: 1, title: cart[0]?.store.isPickupService ? 'Solicitação / Cotação Aceite' : 'Pedido Confirmado', desc: 'A empresa recebeu os detalhes do seu pedido' },
+                { step: 2, title: cart[0]?.store.isPickupService ? 'Estafeta a Caminho para Recolha' : 'Em Preparação / Separação', desc: cart[0]?.store.isPickupService ? 'O estafeta está a caminho do seu endereço para recolher o item' : 'Os itens estão a ser preparados' },
+                { step: 3, title: cart[0]?.store.isPickupService ? 'Na Oficina em Manutenção' : 'Saiu para Entrega', desc: cart[0]?.store.isPickupService ? 'Equipamento a ser analisado na bancada' : 'O estafeta está a caminho do seu endereço' },
                 { step: 4, title: 'Concluído com Sucesso', desc: 'Obrigado por utilizar a nossa plataforma!' }
               ].map(st => {
                 const isCurrent = orderTrackStatus === st.step;
@@ -368,7 +361,7 @@ export default function App() {
             </div>
 
             {/* LISTA DE LOJAS E EMPRESAS */}
-            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#111827', marginBottom: '12px' }}>Estabelecimentos na Serra</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#111827', marginBottom: '12px' }}>Lojas e Serviços na Serra</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {STORES.filter(s => selectedCategory === 'Todos' || s.category === selectedCategory).map(store => (
                 <div 
@@ -383,10 +376,10 @@ export default function App() {
                       <span style={{ fontSize: '12px', fontWeight: '700', color: '#D97706' }}>⭐ {store.rating}</span>
                     </div>
 
-                    {/* SELO DE MODELO LEVA E TRAZ PARA ASSISTÊNCIA TÉCNICA */}
-                    {store.isPickupService && (
-                      <span style={{ display: 'inline-block', backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px', marginTop: '4px' }}>
-                        🛵 SERVIÇO LEVA E TRAZ (BUSCAMOS EM CASA)
+                    {/* BANDEIRA DE BOTÃO DE ORÇAMENTO RÁPIDO */}
+                    {store.hasCalculator && (
+                      <span style={{ display: 'inline-block', backgroundColor: '#F3E8FF', color: '#6B21A8', border: '1px solid #E9D5FF', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px', marginTop: '4px' }}>
+                        🧮 CALCULAR ORÇAMENTO / COTAR
                       </span>
                     )}
 
@@ -415,18 +408,22 @@ export default function App() {
               <div style={{ height: '120px', backgroundImage: `url(${selectedStore.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
               <div style={{ padding: '16px' }}>
                 <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#111827', margin: 0 }}>{selectedStore.name}</h2>
-                <p style={{ fontSize: '12px', color: '#6B7280', margin: '4px 0 8px 0' }}>{selectedStore.category} • 📍 {selectedStore.city}</p>
+                <p style={{ fontSize: '12px', color: '#6B7280', margin: '4px 0 12px 0' }}>{selectedStore.category} • 📍 {selectedStore.city}</p>
                 
-                {selectedStore.isPickupService && (
-                  <div style={{ backgroundColor: '#FEF3C7', color: '#92400E', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>🛵</span>
-                    <span>Ao solicitar este serviço, o estafeta irá até ao seu endereço em {selectedStore.city} para recolher o item.</span>
-                  </div>
+                {/* BOTÃO EM DESTAQUE PARA CALCULAR ORÇAMENTO */}
+                {selectedStore.hasCalculator && (
+                  <button 
+                    onClick={() => setShowCalculator(selectedStore)}
+                    style={{ width: '100%', backgroundColor: '#8B5CF6', color: '#FFFFFF', border: 'none', padding: '10px 14px', borderRadius: '8px', fontWeight: '800', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  >
+                    <span>🧮</span>
+                    <span>Calcular Orçamento / Cotar Peça sem Compromisso</span>
+                  </button>
                 )}
               </div>
             </div>
 
-            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#111827', marginBottom: '12px' }}>Produtos / Serviços Disponíveis</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#111827', marginBottom: '12px' }}>Itens / Serviços Catálogo</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {selectedStore.products.map(product => (
                 <div key={product.id} onClick={() => openProductModal(product, selectedStore)} style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '12px', border: '1px solid #E5E7EB', display: 'flex', gap: '12px', cursor: 'pointer' }}>
@@ -444,7 +441,102 @@ export default function App() {
 
       </main>
 
-      {/* MODAL DE CUSTOMIZAÇÃO DO PRODUTO / DETALHES DO SERVIÇO */}
+      {/* MODAL CALCULADORA DE ORÇAMENTO */}
+      {showCalculator && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 60 }}>
+          <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '600px', borderRadius: '20px 20px 0 0', padding: '20px', maxHeight: '85vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', margin: 0 }}>🧮 Calculadora de Orçamento</h3>
+              <button onClick={() => setShowCalculator(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}>✖</button>
+            </div>
+
+            <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '16px' }}>
+              Preencha os dados do seu {showCalculator.category.includes('Autopeças') ? 'veículo' : 'aparelho'} para receber uma estimativa instantânea de valor.
+            </p>
+
+            {/* Formulário Interativo */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', display: 'block', marginBottom: '4px' }}>Tipo de Categoria:</label>
+                <select value={calcType} onChange={e => setCalcType(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px' }}>
+                  {showCalculator.category.includes('Autopeças') ? (
+                    <>
+                      <option value="Carro Passeio">Carro de Passeio</option>
+                      <option value="Moto / Ciclomotor">Moto / Ciclomotor</option>
+                      <option value="Utilitário / Camioneta">Utilitário / Camioneta</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="Smartphone">Smartphone / Telemóvel</option>
+                      <option value="Notebook / Portátil">Notebook / Portátil</option>
+                      <option value="Tablet">Tablet</option>
+                      <option value="Televisor / Monitor">Televisor / Monitor</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', display: 'block', marginBottom: '4px' }}>Marca:</label>
+                  <input type="text" placeholder="Ex: Samsung, Fiat, Honda" value={calcBrand} onChange={e => setCalcBrand(e.target.value)} style={{ width: '100%', padding: '8px 12px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', display: 'block', marginBottom: '4px' }}>Modelo / Ano:</label>
+                  <input type="text" placeholder="Ex: A52, Palio 2012 1.0" value={calcModel} onChange={e => setCalcModel(e.target.value)} style={{ width: '100%', padding: '8px 12px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '13px', boxSizing: 'border-box' }} />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', display: 'block', marginBottom: '4px' }}>Serviço / Peça Desejada:</label>
+                <select value={calcIssue} onChange={e => setCalcIssue(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px' }}>
+                  {showCalculator.category.includes('Autopeças') ? (
+                    <>
+                      <option value="Kit Troca de Óleo e Filtro">Kit Troca de Óleo e Filtro</option>
+                      <option value="Pastilhas de Travão / Freio">Pastilhas de Travão / Freio</option>
+                      <option value="Bateria Compatível">Bateria Compatível</option>
+                      <option value="Amortecedores Par">Amortecedores Par</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="Troca de Tela">Troca de Tela / Ecrã</option>
+                      <option value="Troca de Bateria">Troca de Bateria Nova</option>
+                      <option value="Conector de Carga / USB">Conector de Carga / USB</option>
+                      <option value="Reparo de Placa / Motor">Reparo de Placa Mãe</option>
+                    </>
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Resultado do Cálculo */}
+            {estimatedPrice !== null ? (
+              <div style={{ backgroundColor: '#F3E8FF', border: '1px solid #D8B4FE', padding: '14px', borderRadius: '12px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '11px', color: '#6B21A8', fontWeight: '700', textTransform: 'uppercase' }}>Estimativa Calculada</span>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: '#581C87', margin: '4px 0' }}>R$ {estimatedPrice.toFixed(2)}</div>
+                <p style={{ fontSize: '11px', color: '#7E22CE', margin: 0 }}>Valor estimado sujeito a confirmação técnica após avaliação do item.</p>
+                
+                <button 
+                  onClick={addCalculatedQuoteToCart}
+                  style={{ width: '100%', marginTop: '12px', backgroundColor: '#8B5CF6', color: '#FFFFFF', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '800', cursor: 'pointer' }}
+                >
+                  Adicionar Cotação ao Carrinho
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={handleCalculateEstimate}
+                style={{ width: '100%', backgroundColor: '#111827', color: '#FFFFFF', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '800', fontSize: '14px', cursor: 'pointer' }}
+              >
+                Calcular Estimativa
+              </button>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE CUSTOMIZAÇÃO DO PRODUTO */}
       {modalProduct && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 60 }}>
           <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '600px', borderRadius: '20px 20px 0 0', padding: '20px', maxHeight: '85vh', overflowY: 'auto' }}>
@@ -456,13 +548,11 @@ export default function App() {
             <img src={modalProduct.product.image} alt={modalProduct.product.name} style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '12px', marginBottom: '12px' }} />
             <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '16px' }}>{modalProduct.product.description}</p>
 
-            <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', display: 'block', marginBottom: '6px' }}>
-              {modalProduct.product.isService ? 'Descreva o problema do aparelho / observações:' : 'Observações:'}
-            </label>
+            <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', display: 'block', marginBottom: '6px' }}>Observações:</label>
             <textarea 
               value={modalNotes} 
               onChange={(e) => setModalNotes(e.target.value)}
-              placeholder={modalProduct.product.isService ? "Ex: Ecrã partido após queda, telemóvel não liga..." : "Ex: Tamanho da peça, cor..."}
+              placeholder="Ex: Detalhes da peça, tamanho, cor..."
               style={{ width: '100%', borderRadius: '8px', border: '1px solid #D1D5DB', padding: '10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', marginBottom: '16px' }}
             />
 
