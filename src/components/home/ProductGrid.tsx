@@ -1,122 +1,104 @@
-import { useState } from 'react';
-import { MapPin, ShoppingCart, User } from 'lucide-react';
-import { ModeToggle } from './home/ModeToggle';
-import { SearchBar } from './home/SearchBar';
-import { PromoBanner } from './home/PromoBanner';
-import { CategoryCarousel } from './home/CategoryCarousel';
-import { ProductGrid } from './home/ProductGrid';
-import type { Product } from './home/ProductCard';
-import { CartDrawer } from './home/CartDrawer';
+import { Product, ProductCard } from './ProductCard';
 
-export interface CartItem extends Product {
-  quantity: number;
+interface ProductGridProps {
+  mode: 'express' | 'shopping';
+  searchQuery: string;
+  city: string;
+  onAddToCart: (product: Product) => void;
 }
 
-export function Home() {
-  const [mode, setMode] = useState<'express' | 'shopping'>('express');
-  const [selectedCity, setSelectedCity] = useState('Tianguá');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+const products: Product[] = [
+  {
+    id: '1',
+    name: 'Açaí da Serra 300ml',
+    price: 18.9,
+    image: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=600',
+    rating: 4.8,
+    delivery: 'Entrega hoje',
+    store: 'Açaí do João',
+    category: 'Alimentação',
+    mode: 'express',
+  },
+  {
+    id: '2',
+    name: 'Marmita Caseira de Frango',
+    price: 22.5,
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600',
+    rating: 4.9,
+    delivery: '15 minutos',
+    store: 'Comidas da Ibiapaba',
+    category: 'Alimentação',
+    mode: 'express',
+  },
+  {
+    id: '3',
+    name: 'Camiseta Serra da Ibiapaba',
+    price: 59.9,
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600',
+    rating: 4.6,
+    delivery: '2 a 3 dias',
+    store: 'Moda Regional',
+    category: 'Roupas',
+    mode: 'shopping',
+  },
+  {
+    id: '4',
+    name: 'Fone Bluetooth Sem Fio',
+    price: 189.9,
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600',
+    rating: 4.5,
+    delivery: '2 a 4 dias',
+    store: 'TechCenter Ibiapaba',
+    category: 'Eletrônicos',
+    mode: 'shopping',
+  },
+];
 
-  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+export function ProductGrid({
+  mode,
+  searchQuery,
+  onAddToCart,
+}: ProductGridProps) {
+  const search = searchQuery.trim().toLowerCase();
 
-  function addToCart(product: Product) {
-    setCartItems((items) => {
-      const existing = items.find((item) => item.id === product.id);
-      if (existing) {
-        return items.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
-        );
-      }
-      return [...items, { ...product, quantity: 1 }];
-    });
-  }
+  const filteredProducts = products.filter((product) => {
+    const matchesMode = product.mode === mode;
+    const matchesSearch =
+      !search ||
+      product.name.toLowerCase().includes(search) ||
+      product.store.toLowerCase().includes(search) ||
+      product.category.toLowerCase().includes(search);
 
-  function changeQuantity(productId: string, change: number) {
-    setCartItems((items) =>
-      items
-        .map((item) =>
-          item.id === productId ? { ...item, quantity: item.quantity + change } : item,
-        )
-        .filter((item) => item.quantity > 0),
-    );
-  }
+    return matchesMode && matchesSearch;
+  });
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-2xl">⛰️</span>
-            <div className="flex flex-col gap-0.5">
-              <h1 className="text-sm sm:text-base font-black tracking-tight leading-none">
-                <span className="text-orange-600">Ibiapaba</span>
-                <span className="text-gray-900">Express</span>
-              </h1>
+    <section>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-black text-gray-900">
+          {mode === 'express' ? '⚡ Disponível agora' : '🛍️ Mais vendidos'}
+        </h2>
 
-              <div className="flex items-center gap-1 text-[11px] text-gray-600">
-                <MapPin size={11} className="flex-shrink-0" />
-                <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  className="bg-transparent border-none focus:outline-none cursor-pointer font-medium"
-                >
-                  <option value="Tianguá">Tianguá</option>
-                  <option value="Ubajara">Ubajara</option>
-                  <option value="Ibiapina">Ibiapina</option>
-                  <option value="São Benedito">São Benedito</option>
-                  <option value="Carnaubal">Carnaubal</option>
-                  <option value="Croatá">Croatá</option>
-                </select>
-              </div>
-            </div>
-          </div>
+        <span className="text-xs text-gray-500">
+          {filteredProducts.length} produtos
+        </span>
+      </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button aria-label="Perfil" className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <User size={20} className="text-gray-700" strokeWidth={1.5} />
-            </button>
-            <button aria-label="Abrir carrinho" onClick={() => setIsCartOpen(true)} className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <ShoppingCart size={20} className="text-gray-700" strokeWidth={1.5} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-orange-600 text-white text-[10px] font-black flex items-center justify-center shadow-md">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
+      {filteredProducts.length === 0 ? (
+        <div className="rounded-2xl bg-white p-10 text-center text-gray-500">
+          Nenhum produto encontrado.
         </div>
-      </header>
-
-      <SearchBar
-        value={searchQuery}
-        onChange={setSearchQuery}
-        city={selectedCity}
-      />
-
-      <ModeToggle mode={mode} onModeChange={setMode} />
-
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-8">
-        <PromoBanner mode={mode} />
-        <CategoryCarousel mode={mode} />
-        <ProductGrid
-          mode={mode}
-          searchQuery={searchQuery}
-          city={selectedCity}
-          onAddToCart={addToCart}
-        />
-      </main>
-
-      <div className="h-8" />
-
-      {isCartOpen && (
-        <CartDrawer
-          items={cartItems}
-          onClose={() => setIsCartOpen(false)}
-          onChangeQuantity={changeQuantity}
-        />
+      ) : (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              {...product}
+              onAddToCart={() => onAddToCart(product)}
+            />
+          ))}
+        </div>
       )}
-    </div>
+    </section>
   );
 }
