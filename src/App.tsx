@@ -1,3 +1,4 @@
+import { PartnerDashboard } from './components/PartnerDashboard';
 import { AdminControlPro } from './components/AdminControlPro';
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
