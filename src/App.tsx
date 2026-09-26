@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { useApp } from './context/AppContext';
+// Imports com os caminhos ajustados de acordo com a raiz do projeto
+import { useApp } from '../context/AppContext';
+import { CourierDashboard } from '../CourierDashboard';
+
 import { Header } from './components/Header';
 import { CartDrawer } from './components/cartdrawer';
 import { CheckoutModal } from './components/customer/CheckoutModal';
 import { MerchantDashboard } from './components/merchant/MerchantDashboard';
-import { CourierDashboard } from './components/courier/CourierDashboard';
-import { Store, Wrench, Star, ShoppingBag, Truck } from 'lucide-react';
 
-// Lojas / Oficinas de Exemplo
+import { Star, ShoppingBag, Wrench, Store } from 'lucide-react';
+
+// Lojas / Oficinas de Exemplo para Teste
 const MOCK_STORES = [
   {
     id: '1',
@@ -42,7 +45,7 @@ export function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  // 🔍 1. FILTRO DA LUPA DE PESQUISA
+  // 🔍 Filtro em tempo real da Lupa de Pesquisa
   const filteredStores = MOCK_STORES.filter(
     (store) =>
       store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -56,7 +59,7 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20">
-      {/* Cabeçalho com Barra de Pesquisa */}
+      {/* Cabeçalho com Lupa */}
       <Header
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -67,8 +70,8 @@ export function App() {
         {/* --- VISÃO CLIENTE --- */}
         {activeTab === 'customer' && (
           <div className="space-y-4">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-              Lojas e Serviços Disponíveis ({filteredStores.length})
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Lojas e Serviços ({filteredStores.length})
             </h2>
 
             {filteredStores.length === 0 ? (
@@ -110,7 +113,7 @@ export function App() {
                     onClick={() => {
                       addToCart({
                         id: `item-${Date.now()}`,
-                        name: `Serviço de Conserto / Item de ${store.name}`,
+                        name: `Serviço - ${store.name}`,
                         price: 150.0,
                         quantity: 1,
                       });
@@ -138,9 +141,9 @@ export function App() {
       {isCartOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 h-full overflow-y-auto">
-            <div className="p-2 border-b flex justify-between items-center">
-              <span className="text-xs font-bold text-slate-400 uppercase">Resumo</span>
-              <button onClick={() => setIsCartOpen(false)} className="text-xs font-bold text-slate-500 p-2">
+            <div className="p-3 border-b flex justify-between items-center">
+              <span className="text-xs font-bold text-slate-400 uppercase">Carrinho</span>
+              <button onClick={() => setIsCartOpen(false)} className="text-xs font-bold text-slate-500 p-1">
                 Fechar ✕
               </button>
             </div>
@@ -156,31 +159,31 @@ export function App() {
         onSuccess={() => alert('Pedido realizado com sucesso!')}
       />
 
-      {/* 📱 NAVEGAÇÃO DO SIMULADOR (RODAPÉ) */}
+      {/* 📱 BARRA DE NAVEGAÇÃO DO SIMULADOR (RODAPÉ) */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-2.5 flex justify-around text-xs font-bold shadow-lg z-40">
         <button
           onClick={() => setActiveTab('customer')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition cursor-pointer ${
+          className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
             activeTab === 'customer' ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600' : 'text-slate-400'
           }`}
         >
-          <span>🛒 Cliente</span>
+          🛒 Cliente
         </button>
         <button
           onClick={() => setActiveTab('merchant')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition cursor-pointer ${
+          className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
             activeTab === 'merchant' ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600' : 'text-slate-400'
           }`}
         >
-          <span>🏪 Lojista</span>
+          🏪 Lojista
         </button>
         <button
           onClick={() => setActiveTab('courier')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition cursor-pointer ${
+          className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
             activeTab === 'courier' ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600' : 'text-slate-400'
           }`}
         >
-          <span>🛵 Entregador</span>
+          🛵 Entregador
         </button>
       </nav>
     </div>
