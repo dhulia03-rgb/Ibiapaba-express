@@ -1,124 +1,209 @@
 import React, { useState } from 'react';
 
+// Tipos de dados
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+}
+
+interface Store {
+  id: number;
+  name: string;
+  category: string;
+  time: string;
+  fee: number;
+  products: Product[];
+}
+
+const STORES: Store[] = [
+  {
+    id: 1,
+    name: 'Restaurante Sabor da Serra',
+    category: 'Comida Típica • Regional',
+    time: '30-40 min',
+    fee: 6.00,
+    products: [
+      { id: 101, name: 'Galinha Cabidela Completa', price: 45.00, description: 'Acompanha arroz, pirão e salada.' },
+      { id: 102, name: 'Carne de Sol do Sertão (2 pessoas)', price: 68.00, description: 'Acompanha macaxeira frita e feijão verde.' },
+      { id: 103, name: 'Refrigerante 2 Litros', price: 12.00, description: 'Coca-Cola ou Guaraná' }
+    ]
+  },
+  {
+    id: 2,
+    name: 'Mercadão Ibiapaba',
+    category: 'Supermercado • Hortifrúti',
+    time: '20-30 min',
+    fee: 4.50,
+    products: [
+      { id: 201, name: 'Cesta Básica Familiar', price: 95.00, description: 'Itens essenciais de primeira qualidade.' },
+      { id: 202, name: 'Kg de Tomate Fresco', price: 8.50, description: 'Selecionados diretamente do produtor local.' },
+      { id: 203, name: 'Água Mineral 20L', price: 14.00, description: 'Retirada e entrega rápida.' }
+    ]
+  }
+];
+
 export default function App() {
-  const [activeModule, setActiveModule] = useState('client');
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+
+  // Adicionar ao carrinho
+  const addToCart = (product: Product) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.product.id === product.id);
+      if (existing) {
+        return prev.map(item => 
+          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prev, { product, quantity: 1 }];
+    });
+  };
+
+  // Calcular total
+  const subtotal = cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+  const deliveryFee = selectedStore ? selectedStore.fee : 0;
+  const total = subtotal + (subtotal > 0 ? deliveryFee : 0);
+
+  const handleCheckout = () => {
+    setOrderPlaced(true);
+    setCart([]);
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', color: '#f8fafc', display: 'flex', flexDirection: 'column', fontFamily: 'sans-serif' }}>
       
-      {/* Header / Barra de Navegação do Super App */}
-      <header style={{ backgroundColor: '#c2410c', borderBottom: '1px solid rgba(249, 115, 22, 0.3)', padding: '12px 16px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Header */}
+      <header style={{ backgroundColor: '#c2410c', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => { setSelectedStore(null); setOrderPlaced(false); }}>
           <span style={{ fontSize: '24px' }}>🚀</span>
-          <h1 style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '1px', color: '#ffffff', margin: 0 }}>IBIAPABA EXPRESS</h1>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: '900', color: '#ffffff', margin: 0 }}>IBIAPABA EXPRESS</h1>
+            <p style={{ fontSize: '11px', color: '#fed7aa', margin: 0 }}>📍 Serra da Ibiapaba</p>
+          </div>
         </div>
         
-        {/* Seletor de Módulos */}
-        <nav style={{ display: 'flex', gap: '6px', marginTop: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-          <button 
-            onClick={() => setActiveModule('client')}
-            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: activeModule === 'client' ? '#22d3ee' : '#9a3412', color: activeModule === 'client' ? '#030712' : '#ffffff', transition: 'all 0.2s' }}
-          >
-            🛒 Cliente
-          </button>
-          <button 
-            onClick={() => setActiveModule('merchant')}
-            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: activeModule === 'merchant' ? '#22d3ee' : '#9a3412', color: activeModule === 'merchant' ? '#030712' : '#ffffff', transition: 'all 0.2s' }}
-          >
-            🏪 Lojista
-          </button>
-          <button 
-            onClick={() => setActiveModule('delivery')}
-            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: activeModule === 'delivery' ? '#22d3ee' : '#9a3412', color: activeModule === 'delivery' ? '#030712' : '#ffffff', transition: 'all 0.2s' }}
-          >
-            🛵 Entregador
-          </button>
-          <button 
-            onClick={() => setActiveModule('admin')}
-            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: activeModule === 'admin' ? '#22d3ee' : '#9a3412', color: activeModule === 'admin' ? '#030712' : '#ffffff', transition: 'all 0.2s' }}
-          >
-            ⚙️ Admin
-          </button>
-        </nav>
+        {cart.length > 0 && !orderPlaced && (
+          <div style={{ backgroundColor: '#22d3ee', color: '#030712', padding: '6px 12px', borderRadius: '20px', fontWeight: 'bold', fontSize: '13px' }}>
+            🛒 {cart.reduce((sum, i) => sum + i.quantity, em => em)} itens (R$ {total.toFixed(2)})
+          </div>
+        )}
       </header>
 
-      {/* Conteúdo Dinâmico Baseado no Módulo Selecionado */}
-      <main style={{ flex: 1, padding: '24px', maxWidth: '1100px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      {/* Conteúdo Principal */}
+      <main style={{ flex: 1, padding: '20px', maxWidth: '800px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         
-        {activeModule === 'client' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#22d3ee', margin: 0 }}>Vitrine do Cliente</h2>
-            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px' }}>Explore os melhores estabelecimentos, mercados e farmácias da região da Ibiapaba.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginTop: '8px' }}>
-              <div style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
-                <h3 style={{ fontWeight: 'bold', fontSize: '16px', color: '#fb923c', margin: '0 0 6px 0' }}>Restaurante Sabor da Serra</h3>
-                <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Comida típica • Entrega rápida</p>
-              </div>
-              <div style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
-                <h3 style={{ fontWeight: 'bold', fontSize: '16px', color: '#fb923c', margin: '0 0 6px 0' }}>Mercadão Ibiapaba</h3>
-                <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Supermercado • Hortifrúti fresco</p>
-              </div>
+        {orderPlaced ? (
+          <div style={{ textAlign: 'center', padding: '40px 20px', backgroundColor: '#1e293b', borderRadius: '16px', border: '1px solid #34d399' }}>
+            <span style={{ fontSize: '48px' }}>✅</span>
+            <h2 style={{ color: '#34d399', fontSize: '22px', marginTop: '12px' }}>Encomenda Realizada com Sucesso!</h2>
+            <p style={{ color: '#cbd5e1', fontSize: '14px', marginTop: '8px' }}>O estabelecimento já recebeu o seu pedido e está a preparar. Acompanhe em breve no radar!</p>
+            <button 
+              onClick={() => { setOrderPlaced(false); setSelectedStore(null); }}
+              style={{ marginTop: '20px', backgroundColor: '#c2410c', color: '#ffffff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              Fazer Nova Compra
+            </button>
+          </div>
+        ) : !selectedStore ? (
+          <div>
+            <div style={{ marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#22d3ee', margin: '0 0 6px 0' }}>O que deseja pedir hoje?</h2>
+              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Os melhores comércios da região direto para a sua porta.</p>
+            </div>
+
+            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#fb923c', marginBottom: '12px' }}>Estabelecimentos Disponíveis</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {STORES.map(store => (
+                <div 
+                  key={store.id} 
+                  onClick={() => setSelectedStore(store)}
+                  style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid rgba(249, 115, 22, 0.3)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <div>
+                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 4px 0' }}>{store.name}</h4>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 8px 0' }}>{store.category}</p>
+                    <span style={{ fontSize: '11px', backgroundColor: 'rgba(34, 211, 238, 0.1)', color: '#22d3ee', padding: '3px 8px', borderRadius: '6px' }}>⏱️ {store.time} • Entrega R$ {store.fee.toFixed(2)}</span>
+                  </div>
+                  <span style={{ fontSize: '18px', color: '#fb923c' }}>➔</span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
+        ) : (
+          <div>
+            <button 
+              onClick={() => setSelectedStore(null)}
+              style={{ background: 'none', border: 'none', color: '#22d3ee', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              ← Voltar para as lojas
+            </button>
 
-        {activeModule === 'merchant' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#22d3ee', margin: 0 }}>Painel do Lojista</h2>
-            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px' }}>Gerencie seus produtos, cardápio e aprove os pedidos que chegam em tempo real.</p>
-            <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
-              <span style={{ display: 'inline-block', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', fontSize: '11px', padding: '4px 10px', borderRadius: '20px', fontWeight: '600', marginBottom: '10px' }}>Novo Pedido #102</span>
-              <p style={{ color: '#f1f5f9', margin: '0 0 16px 0', fontSize: '15px' }}>2x Frango à Passarinho + 1x Refrigerante 2L</p>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button style={{ backgroundColor: '#06b6d4', color: '#030712', fontWeight: 'bold', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', border: 'none', cursor: 'pointer' }}>Aceitar Pedido</button>
-                <button style={{ backgroundColor: 'rgba(244, 63, 94, 0.15)', color: '#fb7185', fontWeight: '600', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', border: 'none', cursor: 'pointer' }}>Recusar</button>
-              </div>
+            <div style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #c2410c' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 4px 0' }}>{selectedStore.name}</h2>
+              <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>{selectedStore.category} • Taxa: R$ {selectedStore.fee.toFixed(2)}</p>
             </div>
-          </div>
-        )}
 
-        {activeModule === 'delivery' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#22d3ee', margin: 0 }}>Radar do Entregador</h2>
-            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px' }}>Acompanhe as entregas disponíveis na sua rota e maximize seus ganhos.</p>
-            <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid rgba(249, 115, 22, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <p style={{ fontSize: '13px', color: '#22d3ee', fontWeight: '600', margin: '0 0 4px 0' }}>📍 Coleta: Centro → Entrega: Bairro de Fátima</p>
-                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>Taxa de Entrega: R$ 8,00</p>
-              </div>
-              <button style={{ backgroundColor: '#ea580c', color: '#ffffff', fontWeight: 'bold', padding: '10px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }}>
-                Aceitar Corrida
-              </button>
+            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#fb923c', marginBottom: '12px' }}>Cardápio</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '30px' }}>
+              {selectedStore.products.map(product => (
+                <div key={product.id} style={{ backgroundColor: '#1e293b', padding: '14px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ paddingRight: '12px' }}>
+                    <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#f8fafc', margin: '0 0 4px 0' }}>{product.name}</h4>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 6px 0' }}>{product.description}</p>
+                    <span style={{ fontSize: '14px', fontWeight: '900', color: '#34d399' }}>R$ {product.price.toFixed(2)}</span>
+                  </div>
+                  <button 
+                    onClick={() => addToCart(product)}
+                    style={{ backgroundColor: '#22d3ee', color: '#030712', border: 'none', padding: '8px 14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    + Adicionar
+                  </button>
+                </div>
+              ))}
             </div>
-          </div>
-        )}
 
-        {activeModule === 'admin' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#22d3ee', margin: 0 }}>Torre de Comando (Admin)</h2>
-            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '14px' }}>Visão geral do ecossistema, lojistas ativos e volume de transações.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-              <div style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
-                <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 4px 0' }}>Pedidos Hoje</p>
-                <p style={{ fontSize: '24px', fontWeight: '900', color: '#fb923c', margin: 0 }}>48</p>
+            {/* Resumo do Carrinho */}
+            {cart.length > 0 && (
+              <div style={{ backgroundColor: '#111827', padding: '16px', borderRadius: '12px', border: '1px solid #22d3ee', position: 'sticky', bottom: '16px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#22d3ee', margin: '0 0 10px 0' }}>O seu Carrinho</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px', fontSize: '13px' }}>
+                  {cart.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                      <span>{item.quantity}x {item.product.name}</span>
+                      <span>R$ {(item.product.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', borderTop: '1px solid #1f2937', paddingTop: '6px', marginTop: '4px' }}>
+                    <span>Taxa de Entrega</span>
+                    <span>R$ {deliveryFee.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ffffff', fontWeight: 'bold', fontSize: '15px', paddingTop: '4px' }}>
+                    <span>Total a Pagar</span>
+                    <span style={{ color: '#34d399' }}>R$ {total.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleCheckout}
+                  style={{ width: '100%', backgroundColor: '#34d399', color: '#030712', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer' }}
+                >
+                  Finalizar Encomenda (WhatsApp / Pix)
+                </button>
               </div>
-              <div style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
-                <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 4px 0' }}>Entregadores Online</p>
-                <p style={{ fontSize: '24px', fontWeight: '900', color: '#22d3ee', margin: 0 }}>12</p>
-              </div>
-              <div style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
-                <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 4px 0' }}>Faturamento Diário</p>
-                <p style={{ fontSize: '24px', fontWeight: '900', color: '#34d399', margin: 0 }}>R$ 1.840,00</p>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
       </main>
 
       {/* Footer */}
-      <footer style={{ backgroundColor: '#030712', textAlign: 'center', padding: '16px', fontSize: '12px', color: '#64748b', borderTop: '1px solid #1e293b', marginTop: 'auto' }}>
-        Ibiapaba Express © 2026 • Todos os direitos reservados
+      <footer style={{ backgroundColor: '#030712', textAlign: 'center', padding: '14px', fontSize: '12px', color: '#64748b', borderTop: '1px solid #1e293b' }}>
+        Ibiapaba Express © 2026 • App do Cliente
       </footer>
     </div>
   );
