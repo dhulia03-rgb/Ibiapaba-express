@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// Imports com os caminhos ajustados de acordo com a raiz do projeto
+// Imports a apontar para a raiz (../) onde as pastas estão no seu GitHub
 import { useApp } from '../context/AppContext';
 import { CourierDashboard } from '../CourierDashboard';
 
@@ -10,7 +10,7 @@ import { MerchantDashboard } from './components/merchant/MerchantDashboard';
 
 import { Star, ShoppingBag, Wrench, Store } from 'lucide-react';
 
-// Lojas / Oficinas de Exemplo para Teste
+// Lojas e Oficinas de Exemplo para Testar a Pesquisa
 const MOCK_STORES = [
   {
     id: '1',
@@ -45,7 +45,7 @@ export function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  // 🔍 Filtro em tempo real da Lupa de Pesquisa
+  // 🔍 Filtro da Lupa de Pesquisa em tempo real
   const filteredStores = MOCK_STORES.filter(
     (store) =>
       store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
