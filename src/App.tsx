@@ -6,6 +6,7 @@ interface Product {
   name: string;
   price: number;
   description: string;
+  image: string;
 }
 
 interface Store {
@@ -25,9 +26,27 @@ const STORES: Store[] = [
     time: '30-40 min',
     fee: 6.00,
     products: [
-      { id: 101, name: 'Galinha Cabidela Completa', price: 45.00, description: 'Acompanha arroz, pirão e salada.' },
-      { id: 102, name: 'Carne de Sol do Sertão (2 pessoas)', price: 68.00, description: 'Acompanha macaxeira frita e feijão verde.' },
-      { id: 103, name: 'Refrigerante 2 Litros', price: 12.00, description: 'Coca-Cola ou Guaraná' }
+      { 
+        id: 101, 
+        name: 'Galinha Cabidela Completa', 
+        price: 45.00, 
+        description: 'Acompanha arroz, pirão e salada.', 
+        image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=400&auto=format&fit=crop&q=80' 
+      },
+      { 
+        id: 102, 
+        name: 'Carne de Sol do Sertão (2 pessoas)', 
+        price: 68.00, 
+        description: 'Acompanha macaxeira frita e feijão verde.', 
+        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&auto=format&fit=crop&q=80' 
+      },
+      { 
+        id: 103, 
+        name: 'Refrigerante 2 Litros', 
+        price: 12.00, 
+        description: 'Coca-Cola ou Guaraná gelado.', 
+        image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400&auto=format&fit=crop&q=80' 
+      }
     ]
   },
   {
@@ -37,9 +56,27 @@ const STORES: Store[] = [
     time: '20-30 min',
     fee: 4.50,
     products: [
-      { id: 201, name: 'Cesta Básica Familiar', price: 95.00, description: 'Itens essenciais de primeira qualidade.' },
-      { id: 202, name: 'Kg de Tomate Fresco', price: 8.50, description: 'Selecionados diretamente do produtor local.' },
-      { id: 203, name: 'Água Mineral 20L', price: 14.00, description: 'Retirada e entrega rápida.' }
+      { 
+        id: 201, 
+        name: 'Cesta Básica Familiar', 
+        price: 95.00, 
+        description: 'Itens essenciais de primeira qualidade.', 
+        image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&auto=format&fit=crop&q=80' 
+      },
+      { 
+        id: 202, 
+        name: 'Kg de Tomate Fresco', 
+        price: 8.50, 
+        description: 'Selecionados diretamente do produtor local.', 
+        image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&auto=format&fit=crop&q=80' 
+      },
+      { 
+        id: 203, 
+        name: 'Água Mineral 20L', 
+        price: 14.00, 
+        description: 'Retirada e entrega rápida em casa.', 
+        image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&auto=format&fit=crop&q=80' 
+      }
     ]
   }
 ];
@@ -87,7 +124,7 @@ export default function App() {
         
         {cart.length > 0 && !orderPlaced && (
           <div style={{ backgroundColor: '#22d3ee', color: '#030712', padding: '6px 12px', borderRadius: '20px', fontWeight: 'bold', fontSize: '13px' }}>
-            🛒 {cart.reduce((sum, i) => sum + i.quantity, em => em)} itens (R$ {total.toFixed(2)})
+            🛒 {cart.reduce((sum, i) => sum + i.quantity, 0)} itens (R$ {total.toFixed(2)})
           </div>
         )}
       </header>
@@ -149,20 +186,29 @@ export default function App() {
 
             <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#fb923c', marginBottom: '12px' }}>Cardápio</h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '30px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '30px' }}>
               {selectedStore.products.map(product => (
-                <div key={product.id} style={{ backgroundColor: '#1e293b', padding: '14px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ paddingRight: '12px' }}>
-                    <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#f8fafc', margin: '0 0 4px 0' }}>{product.name}</h4>
-                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 6px 0' }}>{product.description}</p>
-                    <span style={{ fontSize: '14px', fontWeight: '900', color: '#34d399' }}>R$ {product.price.toFixed(2)}</span>
+                <div key={product.id} style={{ backgroundColor: '#1e293b', padding: '12px', borderRadius: '12px', display: 'flex', gap: '12px', alignItems: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0, backgroundColor: '#334155' }} 
+                  />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#f8fafc', margin: '0 0 2px 0' }}>{product.name}</h4>
+                      <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 6px 0', lineHeight: '1.2' }}>{product.description}</p>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '900', color: '#34d399' }}>R$ {product.price.toFixed(2)}</span>
+                      <button 
+                        onClick={() => addToCart(product)}
+                        style={{ backgroundColor: '#22d3ee', color: '#030712', border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}
+                      >
+                        + Adicionar
+                      </button>
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => addToCart(product)}
-                    style={{ backgroundColor: '#22d3ee', color: '#030712', border: 'none', padding: '8px 14px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                  >
-                    + Adicionar
-                  </button>
                 </div>
               ))}
             </div>
