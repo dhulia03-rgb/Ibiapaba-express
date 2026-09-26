@@ -1,19 +1,27 @@
-
 import React, { useState } from 'react';
 
 // Cidades da Serra da Ibiapaba
 const CITIES = ['Tianguá', 'Ubajara', 'Viçosa do Ceará', 'São Benedito', 'Guaraciaba do Norte', 'Ibiapina', 'Carnaubal', 'Croatá', 'Ipu'];
 
-// Filtros por Categoria (Pills)
-const CATEGORIES = ['Todos', 'Marmitas', 'Lanches', 'Doces & Licores', 'Hortifrúti', 'Bebidas'];
+// Filtros por Categoria Expandidos
+const CATEGORIES = [
+  'Todos',
+  'Marmitas',
+  'Lanches',
+  'Doces & Licores',
+  'Roupas & Moda',
+  'Produtos Gerais',
+  'Autopeças',
+  'Assistência Técnica 🛠️'
+];
 
 // Stories Promocionais
 const STORIES = [
   { id: 'cupons', title: 'Cupons', icon: '🎟️', badge: 'R$ 10', color: '#EF4444' },
-  { id: 'frete', title: 'Frete $0', icon: '🛵', badge: 'Grátis', color: '#10B981' },
+  { id: 'leva_traz', title: 'Leva e Traz', icon: '🛵', badge: 'Serviço', color: '#3B82F6' },
+  { id: 'auto', title: 'Autopeças', icon: '⚙️', badge: 'Rápido', color: '#6B7280' },
+  { id: 'moda', title: 'Vestuário', icon: '👕', badge: 'Nova Coleção', color: '#EC4899' },
   { id: 'serra', title: 'Da Serra', icon: '🍓', badge: 'Locais', color: '#8B5CF6' },
-  { id: 'flash', title: 'Ofertas', icon: '⚡', badge: '-40%', color: '#F59E0B' },
-  { id: 'top', title: 'Famosos', icon: '⭐', badge: 'Top 10', color: '#3B82F6' },
 ];
 
 interface Product {
@@ -25,6 +33,7 @@ interface Product {
   image: string;
   category: string;
   soldCount?: number;
+  isService?: boolean; // Para serviços de reparo/manutenção
 }
 
 interface Store {
@@ -37,6 +46,7 @@ interface Store {
   fee: number;
   logo: string;
   banner: string;
+  isPickupService?: boolean; // Sinaliza o modelo 'Leva e Traz'
   products: Product[];
 }
 
@@ -68,38 +78,110 @@ const STORES: Store[] = [
         image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=400&auto=format&fit=crop&q=80',
         category: 'Marmitas',
         soldCount: 142
-      },
-      {
-        id: 102,
-        name: 'Carne de Sol com Macaxeira',
-        price: 58.00,
-        description: 'Servida na chapa com queijo coalho e manteiga da terra.',
-        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&auto=format&fit=crop&q=80',
-        category: 'Marmitas',
-        soldCount: 89
       }
     ]
   },
   {
     id: 2,
-    name: 'Doces & Licores Artesanais',
-    city: 'Viçosa do Ceará',
-    category: 'Doces & Licores',
-    rating: 5.0,
-    time: '15-25 min',
+    name: 'TechSerra Assistência & Celulares',
+    city: 'Tianguá',
+    category: 'Assistência Técnica 🛠️',
+    rating: 4.9,
+    time: 'Coleta em até 40 min',
     fee: 0.00,
-    logo: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=120&auto=format&fit=crop&q=80',
-    banner: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=80',
+    isPickupService: true, // LEVA E TRAZ
+    logo: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=120&auto=format&fit=crop&q=80',
+    banner: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=80',
     products: [
       {
         id: 201,
-        name: 'Licor de Jabuticaba (500ml)',
-        price: 24.90,
-        oldPrice: 32.00,
-        description: 'Produção artesanal tradicional das serras de Viçosa.',
-        image: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&auto=format&fit=crop&q=80',
-        category: 'Doces & Licores',
-        soldCount: 310
+        name: 'Troca de Ecrã / Tela de Smartphone',
+        price: 150.00,
+        description: 'Buscamos o seu telemóvel em casa, fazemos a troca do ecrã e devolvemos no mesmo dia com garantia.',
+        image: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=400&auto=format&fit=crop&q=80',
+        category: 'Assistência Técnica 🛠️',
+        isService: true
+      },
+      {
+        id: 202,
+        name: 'Formatagem e Limpeza de Portátil',
+        price: 90.00,
+        description: 'Recolha ao domicílio em Tianguá e Ubajara. Inclui backup e instalação de antivírus.',
+        image: 'https://images.unsplash.com/photo-1588702547923-7093a6c36452?w=400&auto=format&fit=crop&q=80',
+        category: 'Assistência Técnica 🛠️',
+        isService: true
+      }
+    ]
+  },
+  {
+    id: 3,
+    name: 'Boutique Serra Elegante',
+    city: 'Ubajara',
+    category: 'Roupas & Moda',
+    rating: 4.8,
+    time: '20-30 min',
+    fee: 3.50,
+    logo: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=120&auto=format&fit=crop&q=80',
+    banner: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=600&auto=format&fit=crop&q=80',
+    products: [
+      {
+        id: 301,
+        name: 'Casaco Frio de Tricô Serra',
+        price: 119.90,
+        oldPrice: 149.90,
+        description: 'Ideal para o clima ameno de Ubajara e Viçosa. Tamanhos P, M e G disponíveis.',
+        image: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&auto=format&fit=crop&q=80',
+        category: 'Roupas & Moda'
+      }
+    ]
+  },
+  {
+    id: 4,
+    name: 'Ibiapaba Autopeças & Moto',
+    city: 'São Benedito',
+    category: 'Autopeças',
+    rating: 4.7,
+    time: '30-45 min',
+    fee: 5.00,
+    logo: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=120&auto=format&fit=crop&q=80',
+    banner: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?w=600&auto=format&fit=crop&q=80',
+    products: [
+      {
+        id: 401,
+        name: 'Óleo de Motor 20W50 (1 Litro)',
+        price: 32.00,
+        description: 'Óleo mineral lubrificante de alta qualidade para carros e motos.',
+        image: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400&auto=format&fit=crop&q=80',
+        category: 'Autopeças'
+      },
+      {
+        id: 402,
+        name: 'Bateria para Moto 6Ah Gel',
+        price: 185.00,
+        description: 'Pronta para uso com garantia de 12 meses do fabricante.',
+        image: 'https://images.unsplash.com/photo-1620021617242-b3021a258457?w=400&auto=format&fit=crop&q=80',
+        category: 'Autopeças'
+      }
+    ]
+  },
+  {
+    id: 5,
+    name: 'Variedades & Casa Ibiapaba',
+    city: 'Viçosa do Ceará',
+    category: 'Produtos Gerais',
+    rating: 4.9,
+    time: '15-25 min',
+    fee: 0.00,
+    logo: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=120&auto=format&fit=crop&q=80',
+    banner: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop&q=80',
+    products: [
+      {
+        id: 501,
+        name: 'Carregador Rápido USB-C 20W',
+        price: 49.90,
+        description: 'Carregamento turbo compatível com iPhone e Android.',
+        image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&auto=format&fit=crop&q=80',
+        category: 'Produtos Gerais'
       }
     ]
   }
@@ -123,7 +205,6 @@ export default function App() {
   const [coupon, setCoupon] = useState('');
   const [discount, setDiscount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'cartao' | 'dinheiro'>('pix');
-  const [cashChange, setCashChange] = useState('');
   const [address, setAddress] = useState({ rua: '', numero: '', bairro: '', pontoRef: '' });
 
   const openProductModal = (product: Product, store: Store) => {
@@ -138,7 +219,7 @@ export default function App() {
 
     setCart(prev => {
       if (prev.length > 0 && prev[0].store.id !== store.id) {
-        if (!window.confirm('O seu carrinho tem itens de outra loja. Deseja limpar para adicionar este produto?')) {
+        if (!window.confirm('O seu carrinho tem itens de outra loja. Deseja limpar para adicionar este item?')) {
           return prev;
         }
         return [{ product, store, quantity: modalQty, notes: modalNotes }];
@@ -168,14 +249,13 @@ export default function App() {
 
   const handleFinishOrder = () => {
     if (!address.rua || !address.bairro) {
-      alert('Por favor, preencha a rua e o bairro para a entrega.');
+      alert('Por favor, preencha a rua e o bairro para a entrega ou recolha.');
       return;
     }
 
     setShowCheckout(false);
     setOrderTrackStatus(1);
     
-    // Simulação de alteração do estado do pedido em tempo real
     setTimeout(() => setOrderTrackStatus(2), 4000);
     setTimeout(() => setOrderTrackStatus(3), 8000);
   };
@@ -190,7 +270,7 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontSize: '18px', color: '#EA1D2C' }}>📍</span>
               <div>
-                <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600', textTransform: 'uppercase' }}>Entregar em</span>
+                <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: '600', textTransform: 'uppercase' }}>Localização na Serra</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <select 
                     value={selectedCity} 
@@ -210,7 +290,7 @@ export default function App() {
             <span style={{ color: '#9CA3AF', fontSize: '14px' }}>🔍</span>
             <input 
               type="text" 
-              placeholder="Pesquise pratos ou produtos da serra..." 
+              placeholder="Buscar comida, roupas, autopeças ou assistência..." 
               style={{ width: '100%', border: 'none', backgroundColor: 'transparent', fontSize: '13px', outline: 'none', color: '#1F2937' }}
             />
           </div>
@@ -220,18 +300,20 @@ export default function App() {
       {/* CONTEÚDO PRINCIPAL */}
       <main style={{ maxWidth: '600px', margin: '0 auto', padding: '16px' }}>
         
-        {/* RASTREAMENTO DO PEDIDO EM TEMPO REAL */}
+        {/* RASTREAMENTO DO PEDIDO / SERVIÇO */}
         {orderTrackStatus !== null ? (
           <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #10B981', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#111827', margin: '0 0 4px 0' }}>🛵 Acompanhar Pedido</h2>
-            <p style={{ fontSize: '12px', color: '#6B7280', margin: '0 0 16px 0' }}>{cart[0]?.store.name} • Entrega em {address.bairro}, {selectedCity}</p>
+            <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#111827', margin: '0 0 4px 0' }}>
+              {cart[0]?.store.isPickupService ? '🛵 Status do Serviço Leva e Traz' : '🛵 Acompanhar Pedido'}
+            </h2>
+            <p style={{ fontSize: '12px', color: '#6B7280', margin: '0 0 16px 0' }}>{cart[0]?.store.name} • Endereço: {address.bairro}, {selectedCity}</p>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
-                { step: 1, title: 'Pedido Confirmado', desc: 'A loja recebeu seu pedido' },
-                { step: 2, title: 'Em Preparação', desc: 'O chefe está preparando seus pratos' },
-                { step: 3, title: 'Saiu para Entrega', desc: 'O estafeta está a caminho do seu endereço' },
-                { step: 4, title: 'Entregue', desc: 'Aproveite sua refeição!' }
+                { step: 1, title: cart[0]?.store.isPickupService ? 'Solicitação Aceite' : 'Pedido Confirmado', desc: 'A loja/empresa recebeu o seu pedido' },
+                { step: 2, title: cart[0]?.store.isPickupService ? 'Estafeta em Cursão para Recolha' : 'Em Preparação / Separação', desc: cart[0]?.store.isPickupService ? 'O estafeta está a caminho do seu endereço para recolher o item' : 'Os itens estão a ser preparados' },
+                { step: 3, title: cart[0]?.store.isPickupService ? 'Na Assistência em Reparo' : 'Saiu para Entrega', desc: cart[0]?.store.isPickupService ? 'Equipamento a ser analisado na oficina' : 'O estafeta está a caminho do seu endereço' },
+                { step: 4, title: 'Concluído com Sucesso', desc: 'Obrigado por utilizar a nossa plataforma!' }
               ].map(st => {
                 const isCurrent = orderTrackStatus === st.step;
                 const isDone = orderTrackStatus > st.step;
@@ -253,7 +335,7 @@ export default function App() {
               onClick={() => { setOrderTrackStatus(null); setCart([]); setSelectedStore(null); }}
               style={{ width: '100%', marginTop: '20px', backgroundColor: '#EA1D2C', color: '#FFFFFF', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}
             >
-              Fazer Novo Pedido
+              Voltar ao Início
             </button>
           </div>
         ) : !selectedStore ? (
@@ -285,66 +367,35 @@ export default function App() {
               ))}
             </div>
 
-            {/* OFERTAS RELÂMPAGO */}
-            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '16px', marginBottom: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '20px' }}>⚡</span>
-                  <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#111827', margin: 0 }}>Ofertas Relâmpago</h3>
-                </div>
-                <span style={{ fontSize: '11px', backgroundColor: '#FEF2F2', color: '#EF4444', padding: '3px 8px', borderRadius: '6px', fontWeight: '700' }}>Termina em 02:14:05</span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {STORES[0].products.map(product => (
-                  <div key={product.id} style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #F3F4F6', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div style={{ position: 'relative' }}>
-                      <img src={product.image} alt={product.name} style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
-                      {product.oldPrice && (
-                        <span style={{ position: 'absolute', top: '6px', left: '6px', backgroundColor: '#EF4444', color: '#FFFFFF', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px' }}>
-                          -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ padding: '10px' }}>
-                      <h4 style={{ fontSize: '13px', fontWeight: '700', color: '#1F2937', margin: '0 0 4px 0' }}>{product.name}</h4>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                        <span style={{ fontSize: '15px', fontWeight: '800', color: '#10B981' }}>R$ {product.price.toFixed(2)}</span>
-                        {product.oldPrice && <span style={{ fontSize: '10px', color: '#9CA3AF', textDecoration: 'line-through' }}>R$ {product.oldPrice.toFixed(2)}</span>}
-                      </div>
-                      <button 
-                        onClick={() => openProductModal(product, STORES[0])}
-                        style={{ width: '100%', marginTop: '8px', backgroundColor: '#EA1D2C', color: '#FFFFFF', border: 'none', padding: '7px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}
-                      >
-                        Opções
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* LISTA DE LOJAS */}
-            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#111827', marginBottom: '12px' }}>Lojas e Restaurantes</h3>
+            {/* LISTA DE LOJAS E EMPRESAS */}
+            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#111827', marginBottom: '12px' }}>Estabelecimentos na Serra</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {STORES.filter(s => selectedCategory === 'Todos' || s.category === selectedCategory).map(store => (
                 <div 
                   key={store.id}
                   onClick={() => setSelectedStore(store)}
-                  style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', border: '1px solid #E5E7EB', padding: '12px', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer' }}
+                  style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', border: '1px solid #E5E7EB', padding: '12px', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', position: 'relative' }}
                 >
-                  <img src={store.logo} alt={store.name} style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover' }} />
+                  <img src={store.logo} alt={store.name} style={{ width: '68px', height: '68px', borderRadius: '12px', objectFit: 'cover' }} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#111827', margin: 0 }}>{store.name}</h4>
                       <span style={{ fontSize: '12px', fontWeight: '700', color: '#D97706' }}>⭐ {store.rating}</span>
                     </div>
-                    <p style={{ fontSize: '12px', color: '#6B7280', margin: '2px 0 6px 0' }}>{store.category} • {store.city}</p>
+
+                    {/* SELO DE MODELO LEVA E TRAZ PARA ASSISTÊNCIA TÉCNICA */}
+                    {store.isPickupService && (
+                      <span style={{ display: 'inline-block', backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px', marginTop: '4px' }}>
+                        🛵 SERVIÇO LEVA E TRAZ (BUSCAMOS EM CASA)
+                      </span>
+                    )}
+
+                    <p style={{ fontSize: '12px', color: '#6B7280', margin: '4px 0 6px 0' }}>{store.category} • {store.city}</p>
                     <div style={{ fontSize: '12px', color: '#4B5563', display: 'flex', gap: '8px' }}>
                       <span>⏱️ {store.time}</span>
                       <span>•</span>
                       <span style={{ color: store.fee === 0 ? '#10B981' : '#4B5563', fontWeight: '600' }}>
-                        {store.fee === 0 ? 'Grátis' : `R$ ${store.fee.toFixed(2)}`}
+                        {store.fee === 0 ? 'Taxa Grátis' : `R$ ${store.fee.toFixed(2)}`}
                       </span>
                     </div>
                   </div>
@@ -354,7 +405,7 @@ export default function App() {
 
           </div>
         ) : (
-          /* CARDÁPIO DA LOJA */
+          /* CATÁLOGO DA LOJA SELECIONADA */
           <div>
             <button onClick={() => setSelectedStore(null)} style={{ background: 'none', border: 'none', color: '#EA1D2C', fontSize: '13px', fontWeight: '700', cursor: 'pointer', marginBottom: '12px' }}>
               ← Voltar às lojas
@@ -365,10 +416,17 @@ export default function App() {
               <div style={{ padding: '16px' }}>
                 <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#111827', margin: 0 }}>{selectedStore.name}</h2>
                 <p style={{ fontSize: '12px', color: '#6B7280', margin: '4px 0 8px 0' }}>{selectedStore.category} • 📍 {selectedStore.city}</p>
+                
+                {selectedStore.isPickupService && (
+                  <div style={{ backgroundColor: '#FEF3C7', color: '#92400E', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>🛵</span>
+                    <span>Ao solicitar este serviço, o estafeta irá até ao seu endereço em {selectedStore.city} para recolher o item.</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#111827', marginBottom: '12px' }}>Produtos</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#111827', marginBottom: '12px' }}>Produtos / Serviços Disponíveis</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {selectedStore.products.map(product => (
                 <div key={product.id} onClick={() => openProductModal(product, selectedStore)} style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '12px', border: '1px solid #E5E7EB', display: 'flex', gap: '12px', cursor: 'pointer' }}>
@@ -386,10 +444,10 @@ export default function App() {
 
       </main>
 
-      {/* MODAL DE CUSTOMIZAÇÃO DO PRODUTO */}
+      {/* MODAL DE CUSTOMIZAÇÃO DO PRODUTO / DETALHES DO SERVIÇO */}
       {modalProduct && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 60 }}>
-          <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '600px', borderRadius: '20px 20px 0 0', padding: '20px', maxH: '85vh', overflowY: 'auto' }}>
+          <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '600px', borderRadius: '20px 20px 0 0', padding: '20px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h3 style={{ fontSize: '18px', fontWeight: '800', margin: 0 }}>{modalProduct.product.name}</h3>
               <button onClick={() => setModalProduct(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}>✖</button>
@@ -398,11 +456,13 @@ export default function App() {
             <img src={modalProduct.product.image} alt={modalProduct.product.name} style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '12px', marginBottom: '12px' }} />
             <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '16px' }}>{modalProduct.product.description}</p>
 
-            <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', display: 'block', marginBottom: '6px' }}>Observações para a cozinha:</label>
+            <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', display: 'block', marginBottom: '6px' }}>
+              {modalProduct.product.isService ? 'Descreva o problema do aparelho / observações:' : 'Observações:'}
+            </label>
             <textarea 
               value={modalNotes} 
               onChange={(e) => setModalNotes(e.target.value)}
-              placeholder="Ex: Tirar cebola, maionese à parte..."
+              placeholder={modalProduct.product.isService ? "Ex: Ecrã partido após queda, telemóvel não liga..." : "Ex: Tamanho da peça, cor..."}
               style={{ width: '100%', borderRadius: '8px', border: '1px solid #D1D5DB', padding: '10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', marginBottom: '16px' }}
             />
 
@@ -424,17 +484,19 @@ export default function App() {
         </div>
       )}
 
-      {/* CHECKOUT COM ENDEREÇO E CUPOM */}
+      {/* CHECKOUT COM RECOLHA / ENTREGA E PAGAMENTO */}
       {showCheckout && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 60 }}>
           <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '600px', borderRadius: '20px 20px 0 0', padding: '20px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', margin: 0 }}>Finalizar Pedido</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', margin: 0 }}>Finalizar {cart[0]?.store.isPickupService ? 'Solicitação de Serviço' : 'Pedido'}</h3>
               <button onClick={() => setShowCheckout(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}>✖</button>
             </div>
 
             {/* Endereço */}
-            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#374151', marginBottom: '8px' }}>📍 Endereço de Entrega</h4>
+            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#374151', marginBottom: '8px' }}>
+              📍 {cart[0]?.store.isPickupService ? 'Endereço para Recolha do Equipamento' : 'Endereço de Entrega'}
+            </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
               <input type="text" placeholder="Rua / Avenida *" value={address.rua} onChange={e => setAddress({...address, rua: e.target.value})} style={{ padding: '8px 12px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '13px' }} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '8px' }}>
@@ -463,13 +525,13 @@ export default function App() {
             {/* Resumo */}
             <div style={{ backgroundColor: '#F9FAFB', padding: '12px', borderRadius: '12px', marginBottom: '16px', fontSize: '13px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Subtotal:</span><span>R$ {subtotal.toFixed(2)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Taxa de Entrega:</span><span>R$ {deliveryFee.toFixed(2)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>{cart[0]?.store.isPickupService ? 'Taxa Leva e Traz:' : 'Taxa de Entrega:'}</span><span>R$ {deliveryFee.toFixed(2)}</span></div>
               {discount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 'bold', marginBottom: '4px' }}><span>Desconto:</span><span>- R$ {discount.toFixed(2)}</span></div>}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '15px', color: '#111827', marginTop: '8px', borderTop: '1px solid #E5E7EB', paddingTop: '8px' }}><span>Total:</span><span>R$ {total.toFixed(2)}</span></div>
             </div>
 
             <button onClick={handleFinishOrder} style={{ width: '100%', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', padding: '14px', borderRadius: '10px', fontWeight: '800', fontSize: '15px', cursor: 'pointer' }}>
-              Confirmar Pedido
+              Confirmar {cart[0]?.store.isPickupService ? 'Recolha ao Domicílio' : 'Pedido'}
             </button>
           </div>
         </div>
@@ -480,7 +542,7 @@ export default function App() {
         <div style={{ position: 'fixed', bottom: '65px', left: 0, right: 0, padding: '0 16px', zIndex: 30 }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#111827', color: '#FFFFFF', padding: '12px 16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <span style={{ fontSize: '11px', color: '#9CA3AF', display: 'block' }}>Total do pedido</span>
+              <span style={{ fontSize: '11px', color: '#9CA3AF', display: 'block' }}>Total acumulado</span>
               <span style={{ fontSize: '16px', fontWeight: '800', color: '#10B981' }}>R$ {total.toFixed(2)}</span>
             </div>
             <button onClick={() => setShowCheckout(true)} style={{ backgroundColor: '#EA1D2C', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
