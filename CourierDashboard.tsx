@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from './src/lib/supabase'; // <-- Caminho corrigido para buscar dentro de src/lib
+import { supabase } from './src/lib/supabase';
 
 export function DeliveryPinModal({ orderId, onSuccess }: { orderId: string; onSuccess: () => void }) {
   const [pin, setPin] = useState('');
