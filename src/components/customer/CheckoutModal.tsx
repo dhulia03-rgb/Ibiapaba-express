@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../../context/AppContext';
 import { CustomerAddress } from '../../types';
 import { MapPin, X, ArrowRight, Building, Search } from 'lucide-react';
 
