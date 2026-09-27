@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { CourierDashboard } from '../CourierDashboard';
 
 import { Header } from './components/Header';
-import { CartDrawer } from './components/CartDrawer';
+import { CartDrawer } from './components/home/CartDrawer'; // <-- Caminho corrigido com /home/
 import { CheckoutModal } from './components/customer/CheckoutModal';
 import { MerchantDashboard } from './components/merchant/MerchantDashboard';
 
@@ -185,7 +185,7 @@ export function App() {
         >
           🛵 Entregador
         </button>
-      </nav>
+        </nav>
     </div>
   );
 }
