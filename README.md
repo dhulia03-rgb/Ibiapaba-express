@@ -34,3 +34,5 @@ src/
 │   └── supabase.ts            # Configuração de conexão com o Supabase
 ├── App.tsx                    # Componente principal de rotas e visualização
 └── main.tsx                   # Ponto de entrada da aplicação
+
+
