@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase'; // Ajusta o caminho de importação do teu cliente Supabase
+import { supabase } from './src/lib/supabase'; // <-- Caminho corrigido para buscar dentro de src/lib
 
 export function DeliveryPinModal({ orderId, onSuccess }: { orderId: string; onSuccess: () => void }) {
   const [pin, setPin] = useState('');
