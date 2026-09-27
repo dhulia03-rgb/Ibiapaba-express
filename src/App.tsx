@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-// Imports a apontar para a raiz (../) onde as pastas estão no seu GitHub
+// Imports dos arquivos nas suas respetivas pastas
 import { useApp } from '../context/AppContext';
-import { CourierDashboard } from '../CourierDashboard';
+import { CourierDashboard } from './components/courier/CourierDashboard'; // <-- Importação corrigida para a subpasta courier
 
 import { Header } from './components/Header';
 import { CartDrawer } from './components/home/CartDrawer';
@@ -185,7 +185,7 @@ export function App() {
         >
           🛵 Entregador
         </button>
-        </nav>
+      </nav>
     </div>
   );
 }
