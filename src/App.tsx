@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { CourierDashboard } from '../CourierDashboard';
 
 import { Header } from './components/Header';
-import { CartDrawer } from './components/cartdrawer';
+import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/customer/CheckoutModal';
 import { MerchantDashboard } from './components/merchant/MerchantDashboard';
 
