@@ -1,191 +1,215 @@
 import React, { useState } from 'react';
-// Imports dos arquivos nas suas respetivas pastas
-import { useApp } from '../context/AppContext';
-import { CourierDashboard } from './components/courier/CourierDashboard'; // <-- Importação corrigida para a subpasta courier
-
+import { useApp } from './context/AppContext';
 import { Header } from './components/Header';
-import { CartDrawer } from './components/home/CartDrawer';
-import { CheckoutModal } from './components/customer/CheckoutModal';
+import { Home } from './components/Home';
+import { CourierDashboard } from './components/courier/CourierDashboard';
 import { MerchantDashboard } from './components/merchant/MerchantDashboard';
-
-import { Star, ShoppingBag, Wrench, Store } from 'lucide-react';
-
-// Lojas e Oficinas de Exemplo para Testar a Pesquisa
-const MOCK_STORES = [
-  {
-    id: '1',
-    name: 'TechFix Assistência Técnica',
-    category: 'Reparação de Telemóveis e PCs',
-    rating: 4.9,
-    supportsPickupDelivery: true,
-    supportsTakeaway: true,
-  },
-  {
-    id: '2',
-    name: 'Oficina do Celular',
-    category: 'Troca de Ecrã e Bateria',
-    rating: 4.7,
-    supportsPickupDelivery: true,
-    supportsTakeaway: true,
-  },
-  {
-    id: '3',
-    name: 'Restaurante Sabor Express',
-    category: 'Alimentação & Marmitas',
-    rating: 4.5,
-    supportsPickupDelivery: false,
-    supportsTakeaway: true,
-  },
-];
+import { CheckoutModal } from './components/customer/CheckoutModal';
+import { CartDrawer } from './components/home/CartDrawer';
+import { Home as HomeIcon, Search, ShoppingBag, User, Bike, Store, ArrowLeft } from 'lucide-react';
 
 export function App() {
-  const { addToCart } = useApp();
-  const [activeTab, setActiveTab] = useState<'customer' | 'merchant' | 'courier'>('customer');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { orders } = useApp();
+  
+  // Estados Globais de Navegação
+  const [activeTab, setActiveTab] = useState<'home' | 'search' | 'orders' | 'profile'>('home');
+  const [userRole, setUserRole] = useState<'customer' | 'courier' | 'merchant'>('customer');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-
-  // 🔍 Filtro da Lupa de Pesquisa em tempo real
-  const filteredStores = MOCK_STORES.filter(
-    (store) =>
-      store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      store.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleOpenCheckout = () => {
-    setIsCartOpen(false);
-    setIsCheckoutOpen(true);
-  };
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20">
-      {/* Cabeçalho com Lupa */}
-      <Header
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onOpenCart={() => setIsCartOpen(true)}
-      />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20">
+      {/* Cabeçalho Superior */}
+      <Header onOpenCart={() => setIsCartOpen(true)} />
 
-      <main className="max-w-4xl mx-auto p-4">
-        {/* --- VISÃO CLIENTE --- */}
-        {activeTab === 'customer' && (
-          <div className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Lojas e Serviços ({filteredStores.length})
-            </h2>
+      {/* CONTEÚDO PRINCIPAL (Troca de acordo com a aba e o perfil ativo) */}
+      <main className="max-w-md mx-auto">
+        {/* Se estiver no perfil de Entregador */}
+        {userRole === 'courier' ? (
+          <div>
+            <div className="bg-amber-500 text-white p-3 flex items-center justify-between shadow-sm">
+              <span className="font-bold text-xs uppercase tracking-wider">Modo Entregador Ativo</span>
+              <button
+                onClick={() => setUserRole('customer')}
+                className="text-xs bg-white text-amber-900 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Voltar ao App</span>
+              </button>
+            </div>
+            <CourierDashboard />
+          </div>
+        ) : userRole === 'merchant' ? (
+          /* Se estiver no perfil de Lojista/Oficina */
+          <div>
+            <div className="bg-indigo-600 text-white p-3 flex items-center justify-between shadow-sm">
+              <span className="font-bold text-xs uppercase tracking-wider">Modo Lojista/Oficina Ativo</span>
+              <button
+                onClick={() => setUserRole('customer')}
+                className="text-xs bg-white text-indigo-900 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Voltar ao App</span>
+              </button>
+            </div>
+            <MerchantDashboard />
+          </div>
+        ) : (
+          /* Perfil de Cliente (Navegação pelas Abas Inferiores) */
+          <div>
+            {activeTab === 'home' && (
+              <Home
+                onOpenCheckout={() => setIsCheckoutOpen(true)}
+                onOpenCart={() => setIsCartOpen(true)}
+              />
+            )}
 
-            {filteredStores.length === 0 ? (
-              <div className="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <p className="text-sm text-slate-500 font-medium">
-                  Nenhuma loja ou serviço encontrado para "{searchQuery}".
+            {activeTab === 'search' && (
+              <div className="p-4 space-y-4">
+                <h2 className="text-lg font-bold">Buscar na Serra</h2>
+                <input
+                  type="text"
+                  placeholder="O que você procura hoje?"
+                  className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                />
+                <p className="text-xs text-slate-500 text-center py-8">
+                  Digite o nome do restaurante, produto ou serviço acima.
                 </p>
               </div>
-            ) : (
-              filteredStores.map((store) => (
-                <div
-                  key={store.id}
-                  className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-base text-slate-800 dark:text-white">{store.name}</h3>
-                      <span className="flex items-center text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md">
-                        <Star className="w-3 h-3 fill-amber-500 mr-1" />
-                        {store.rating}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500">{store.category}</p>
-                    <div className="flex gap-2 pt-1">
-                      {store.supportsPickupDelivery && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 rounded-md flex items-center gap-1">
-                          <Wrench className="w-3 h-3" /> Leva e Traz
-                        </span>
-                      )}
-                      {store.supportsTakeaway && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 rounded-md flex items-center gap-1">
-                          <Store className="w-3 h-3" /> Retirada
-                        </span>
-                      )}
-                    </div>
+            )}
+
+            {activeTab === 'orders' && (
+              <div className="p-4 space-y-4">
+                <h2 className="text-lg font-bold">Seus Pedidos</h2>
+                {orders.length === 0 ? (
+                  <div className="text-center py-12 space-y-3 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
+                    <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto" />
+                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      Você ainda não fez nenhum pedido na Serra.
+                    </p>
                   </div>
+                ) : (
+                  orders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2"
+                    >
+                      <div className="flex justify-between items-center text-xs border-b pb-2">
+                        <span className="font-mono font-bold text-slate-400">#{order.id}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold uppercase text-[10px]">
+                          {order.status}
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {order.fulfillmentType === 'pickup_delivery' ? '🛠️ Leva e Traz' : '🛵 Entrega'}
+                      </p>
+                      {order.pickupPin && (
+                        <p className="text-xs font-mono text-amber-600 font-bold">
+                          PIN Coleta: {order.pickupPin} | PIN Devolução: {order.deliveryPin}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {activeTab === 'profile' && (
+              <div className="p-4 space-y-6">
+                <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 font-black text-lg flex items-center justify-center">
+                    IE
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm">Usuário Ibiapaba</h3>
+                    <p className="text-xs text-slate-500">cliente@ibiapaba.com</p>
+                  </div>
+                </div>
+
+                {/* Seleção de Perfis/Painéis de Trabalho */}
+                <div className="space-y-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Modos de Acesso</p>
+                  
+                  <button
+                    onClick={() => setUserRole('courier')}
+                    className="w-full p-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs flex items-center justify-between transition shadow-md cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Bike className="w-5 h-5" />
+                      <span>Abrir Painel do Entregador</span>
+                    </div>
+                    <span>→</span>
+                  </button>
 
                   <button
-                    onClick={() => {
-                      addToCart({
-                        id: `item-${Date.now()}`,
-                        name: `Serviço - ${store.name}`,
-                        price: 150.0,
-                        quantity: 1,
-                      });
-                      setIsCartOpen(true);
-                    }}
-                    className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer flex items-center justify-center gap-1.5"
+                    onClick={() => setUserRole('merchant')}
+                    className="w-full p-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs flex items-center justify-between transition shadow-md cursor-pointer"
                   >
-                    <ShoppingBag className="w-4 h-4" />
-                    <span>Adicionar ao Carrinho</span>
+                    <div className="flex items-center gap-2.5">
+                      <Store className="w-5 h-5" />
+                      <span>Abrir Painel da Loja / Oficina</span>
+                    </div>
+                    <span>→</span>
                   </button>
                 </div>
-              ))
+              </div>
             )}
           </div>
         )}
-
-        {/* --- VISÃO LOJISTA --- */}
-        {activeTab === 'merchant' && <MerchantDashboard />}
-
-        {/* --- VISÃO ENTREGADOR --- */}
-        {activeTab === 'courier' && <CourierDashboard />}
       </main>
 
-      {/* 🛒 DRAWER DO CARRINHO */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 h-full overflow-y-auto">
-            <div className="p-3 border-b flex justify-between items-center">
-              <span className="text-xs font-bold text-slate-400 uppercase">Carrinho</span>
-              <button onClick={() => setIsCartOpen(false)} className="text-xs font-bold text-slate-500 p-1">
-                Fechar ✕
-              </button>
-            </div>
-            <CartDrawer onOpenCheckout={handleOpenCheckout} />
+      {/* BARRA DE NAVEGAÇÃO INFERIOR FIXA */}
+      {userRole === 'customer' && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-40">
+          <div className="max-w-md mx-auto grid grid-cols-4 py-2">
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
+                activeTab === 'home' ? 'text-emerald-600' : 'text-slate-400'
+              }`}
+            >
+              <HomeIcon className="w-5 h-5" />
+              <span>Início</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('search')}
+              className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
+                activeTab === 'search' ? 'text-emerald-600' : 'text-slate-400'
+              }`}
+            >
+              <Search className="w-5 h-5" />
+              <span>Busca</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
+                activeTab === 'orders' ? 'text-emerald-600' : 'text-slate-400'
+              }`}
+            >
+              <ShoppingBag className="w-5 h-5" />
+              <span>Pedidos</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
+                activeTab === 'profile' ? 'text-emerald-600' : 'text-slate-400'
+              }`}
+            >
+              <User className="w-5 h-5" />
+              <span>Perfil</span>
+            </button>
           </div>
-        </div>
+        </nav>
       )}
 
-      {/* 📍 MODAL DE ENDEREÇO / CEP */}
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        onSuccess={() => alert('Pedido realizado com sucesso!')}
-      />
-
-      {/* 📱 BARRA DE NAVEGAÇÃO DO SIMULADOR (RODAPÉ) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-2.5 flex justify-around text-xs font-bold shadow-lg z-40">
-        <button
-          onClick={() => setActiveTab('customer')}
-          className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
-            activeTab === 'customer' ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600' : 'text-slate-400'
-          }`}
-        >
-          🛒 Cliente
-        </button>
-        <button
-          onClick={() => setActiveTab('merchant')}
-          className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
-            activeTab === 'merchant' ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600' : 'text-slate-400'
-          }`}
-        >
-          🏪 Lojista
-        </button>
-        <button
-          onClick={() => setActiveTab('courier')}
-          className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
-            activeTab === 'courier' ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600' : 'text-slate-400'
-          }`}
-        >
-          🛵 Entregador
-        </button>
-      </nav>
+      {/* Modais de Carrinho e Checkout */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} onCheckout={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }} />
+      <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} onSuccess={() => setActiveTab('orders')} />
     </div>
   );
 }
+
+export default App;
