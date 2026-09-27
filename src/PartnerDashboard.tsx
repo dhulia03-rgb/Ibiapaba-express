@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 export function PartnerDashboard() {
   const [docType, setDocType] = useState('MEI');
