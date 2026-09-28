@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from './context/AppContext';
 import Header from './components/Header';
-import CategoryCarousel from './components/CategoryCarousel';
 import MerchantCard from './components/MerchantCard';
 import ProductCatalogModal from './components/ProductCatalogModal';
 import CheckoutModal from './components/CheckoutModal';
 import CourierDashboard from './components/CourierDashboard';
 import MerchantDashboard from './components/MerchantDashboard';
 import AdminControlPro from './components/AdminControlPro';
-import { Home, Search, ShoppingBag, User, Store, Bike, ShieldCheck, ArrowRight, Mail, Lock, Phone, Building, CheckCircle2 } from 'lucide-react';
+import { Home, Search, ShoppingBag, User, Store, Bike, ArrowRight, Mail, Lock, Phone, Building, CheckCircle2 } from 'lucide-react';
 
 const SERRAN_CITIES = [
   'Tianguá',
@@ -34,7 +33,6 @@ export default function App() {
     phone: '',
     password: '',
     storeName: '',
-    // Cidades que o comércio escolhe atender
     serviceCities: ['Tianguá'] as string[]
   });
 
@@ -175,7 +173,6 @@ export default function App() {
                       />
                     </div>
 
-                    {/* SELETOR DE CIDADES DE ATUAÇÃO DO COMÉRCIO */}
                     <div className="space-y-2 bg-slate-950/50 p-3 rounded-xl border border-slate-800">
                       <label className="text-xs font-semibold text-amber-400 block">
                         Cidades de Atuação (Selecione onde sua loja entrega/atende):
@@ -274,11 +271,6 @@ export default function App() {
 
       {activeTab === 'home' && (
         <main className="max-w-7xl mx-auto px-4 py-4 space-y-6">
-          <CategoryCarousel 
-            selectedCategory={selectedCategory} 
-            onSelectCategory={setSelectedCategory} 
-          />
-
           <section>
             <h2 className="text-lg font-bold text-white mb-3">Lojas e Serviços na Serra</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
