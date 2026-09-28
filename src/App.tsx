@@ -8,16 +8,40 @@ import CheckoutModal from './components/CheckoutModal';
 import CourierDashboard from './components/CourierDashboard';
 import MerchantDashboard from './components/MerchantDashboard';
 import AdminControlPro from './components/AdminControlPro';
-import { Home, Search, ShoppingBag, User, Store, Bike, ShieldCheck } from 'lucide-react';
+import { Home, Search, ShoppingBag, User, Store, Bike, ShieldCheck, ArrowRight, Mail, Lock, Phone, MapPin, Building } from 'lucide-react';
 
 export default function App() {
-  const { merchants, selectedMerchant, setSelectedMerchant, orders } = useApp();
+  const { merchants, selectedMerchant, orders } = useApp();
+  
+  // Estado de autenticação inicial (false = exige cadastro/login no primeiro acesso)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
+  const [role, setRole] = useState<'customer' | 'merchant' | 'courier'>('customer');
+
+  // Estados de formulário
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    city: 'Tianguá',
+    storeName: '',
+    vehicleType: 'moto'
+  });
+
   const [activeTab, setActiveTab] = useState<'home' | 'search' | 'orders' | 'profile'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'customer' | 'courier' | 'merchant' | 'admin'>('customer');
 
-  // Filtragem de Lojas/Serviços
+  // Tratar cadastro / login
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simula a validação e criação da conta no Supabase
+    setIsAuthenticated(true);
+    setViewMode(role);
+  };
+
   const filteredMerchants = merchants.filter(m => {
     const matchesCategory = selectedCategory ? m.category === selectedCategory : true;
     const matchesSearch = searchQuery 
@@ -27,27 +51,187 @@ export default function App() {
     return matchesCategory && matchesSearch;
   });
 
-  // Se o usuário alternou para o painel de Entregador
+  // 1. TELA DE PRIMEIRO CONTATO / CADASTRO / LOGIN
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
+          
+          {/* Logo e Boas-Vindas */}
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-red-600 rounded-2xl text-white font-black text-2xl shadow-lg shadow-red-600/30">
+              IE
+            </div>
+            <h1 className="text-2xl font-black tracking-tight text-white">Ibiapaba Express</h1>
+            <p className="text-xs text-slate-400">O ecossistema completo da Serra da Ibiapaba</p>
+          </div>
+
+          {/* Abas Alternar: Login / Criar Conta */}
+          <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+            <button
+              onClick={() => setAuthMode('register')}
+              className={`flex-1 py-2 rounded-lg transition ${authMode === 'register' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+            >
+              Criar Conta
+            </button>
+            <button
+              onClick={() => setAuthMode('login')}
+              className={`flex-1 py-2 rounded-lg transition ${authMode === 'login' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+            >
+              Já tenho conta
+            </button>
+          </div>
+
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
+            {authMode === 'register' && (
+              <>
+                {/* Seletor de Perfil (Usuário / Comércio / Entregador) */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-300">Como deseja atuar no app?</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRole('customer')}
+                      className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition text-center ${
+                        role === 'customer' 
+                          ? 'border-red-500 bg-red-500/10 text-white' 
+                          : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <User className="w-5 h-5 mb-1" />
+                      <span className="text-[10px] font-bold">Cliente</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRole('merchant')}
+                      className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition text-center ${
+                        role === 'merchant' 
+                          ? 'border-amber-500 bg-amber-500/10 text-white' 
+                          : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <Store className="w-5 h-5 mb-1" />
+                      <span className="text-[10px] font-bold">Comércio</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRole('courier')}
+                      className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition text-center ${
+                        role === 'courier' 
+                          ? 'border-emerald-500 bg-emerald-500/10 text-white' 
+                          : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <Bike className="w-5 h-5 mb-1" />
+                      <span className="text-[10px] font-bold">Entregador</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Campos de Nome */}
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    placeholder={role === 'merchant' ? 'Nome do Responsável' : 'Seu Nome Completo'}
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+                  />
+                </div>
+
+                {/* Campo específico se for loja */}
+                {role === 'merchant' && (
+                  <div className="relative">
+                    <Building className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nome da Loja / Oficina / Lanchonete"
+                      value={formData.storeName}
+                      onChange={(e) => setFormData({...formData, storeName: e.target.value})}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+                )}
+
+                {/* Telefone / WhatsApp */}
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="WhatsApp / Telemóvel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* E-mail */}
+            <div className="relative">
+              <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+              <input
+                type="email"
+                required
+                placeholder="Seu E-mail"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+              />
+            </div>
+
+            {/* Senha */}
+            <div className="relative">
+              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+              <input
+                type="password"
+                required
+                placeholder="Palavra-passe / Senha"
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+              />
+            </div>
+
+            {/* Botão de Envio */}
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-red-600/20 mt-2"
+            >
+              <span>{authMode === 'register' ? 'Concluir Cadastro e Entrar' : 'Acessar Conta'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
+
+        </div>
+      </div>
+    );
+  }
+
+  // 2. PAINÉIS ESPECÍFICOS DEPOIS DE LOGADO
   if (viewMode === 'courier') {
     return <CourierDashboard onSwitchToCustomer={() => setViewMode('customer')} />;
   }
 
-  // Se o usuário alternou para o painel de Lojista
   if (viewMode === 'merchant') {
     return <MerchantDashboard onSwitchToCustomer={() => setViewMode('customer')} />;
   }
 
-  // Se o usuário alternou para o painel Admin
   if (viewMode === 'admin') {
     return <AdminControlPro onSwitchToCustomer={() => setViewMode('customer')} />;
   }
 
+  // 3. NAVEGAÇÃO DE CLIENTE COM VITRINE E LOJAS
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-24">
-      {/* Cabeçalho */}
       <Header />
 
-      {/* Conteúdo Aba Início */}
       {activeTab === 'home' && (
         <main className="max-w-7xl mx-auto px-4 py-4 space-y-6">
           <CategoryCarousel 
@@ -66,7 +250,6 @@ export default function App() {
         </main>
       )}
 
-      {/* Aba de Busca */}
       {activeTab === 'search' && (
         <main className="max-w-7xl mx-auto px-4 py-4 space-y-4">
           <div className="relative">
@@ -87,7 +270,6 @@ export default function App() {
         </main>
       )}
 
-      {/* Aba Meus Pedidos */}
       {activeTab === 'orders' && (
         <main className="max-w-3xl mx-auto px-4 py-6">
           <h2 className="text-xl font-bold text-white mb-4">Seus Pedidos Ativos</h2>
@@ -109,11 +291,6 @@ export default function App() {
                     </div>
                     <span className="text-sm font-bold text-emerald-400">R$ {order.total.toFixed(2)}</span>
                   </div>
-                  <div className="text-xs text-slate-400 space-y-1 mt-3">
-                    <p>📍 {order.delivery_address.street}, {order.delivery_address.number} - {order.delivery_address.neighborhood}</p>
-                    {order.pickup_pin && <p className="text-amber-400 font-mono">🔑 PIN Retirada: {order.pickup_pin}</p>}
-                    {order.delivery_pin && <p className="text-emerald-400 font-mono">🔑 PIN Entrega: {order.delivery_pin}</p>}
-                  </div>
                 </div>
               ))}
             </div>
@@ -121,15 +298,14 @@ export default function App() {
         </main>
       )}
 
-      {/* Aba Perfil (Painel de Alternância de Perfil) */}
       {activeTab === 'profile' && (
         <main className="max-w-md mx-auto px-4 py-6 space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 text-center">
             <div className="w-16 h-16 bg-red-600/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
               <User className="w-8 h-8" />
             </div>
-            <h2 className="text-lg font-bold text-white">Modo de Visualização</h2>
-            <p className="text-xs text-slate-400 mt-1">Escolha qual painel deseja acessar no Ibiapaba Express:</p>
+            <h2 className="text-lg font-bold text-white">{formData.name || 'Usuário Ibiapaba'}</h2>
+            <p className="text-xs text-slate-400 mt-1">{formData.email || 'usuario@ibiapaba.com'}</p>
           </div>
 
           <div className="space-y-3">
@@ -143,7 +319,7 @@ export default function App() {
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-semibold text-white">Painel da Loja / Oficina</p>
-                  <p className="text-xs text-slate-400">Gerenciar catálogo, pedidos e cotações</p>
+                  <p className="text-xs text-slate-400">Gerenciar catálogo e pedidos</p>
                 </div>
               </div>
             </button>
@@ -158,36 +334,25 @@ export default function App() {
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-semibold text-white">Painel do Entregador</p>
-                  <p className="text-xs text-slate-400">Aceitar corridas e validação por PIN</p>
+                  <p className="text-xs text-slate-400">Aceitar corridas e entregas</p>
                 </div>
               </div>
             </button>
 
             <button
-              onClick={() => setViewMode('admin')}
-              className="w-full flex items-center justify-between p-4 bg-slate-900 border border-slate-800 hover:border-red-500/50 rounded-2xl transition"
+              onClick={() => setIsAuthenticated(false)}
+              className="w-full py-3 bg-red-500/10 text-red-400 rounded-xl font-bold text-xs hover:bg-red-500/20 transition"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-red-500/10 text-red-400 rounded-xl">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-white">Painel do Administrador</p>
-                  <p className="text-xs text-slate-400">Visão geral do ecossistema e taxas</p>
-                </div>
-              </div>
+              Sair da Conta
             </button>
           </div>
         </main>
       )}
 
-      {/* Modal de Catálogo do Estabelecimento */}
       {selectedMerchant && <ProductCatalogModal />}
-
-      {/* Modal de Finalizar Pedido / Checkout */}
       <CheckoutModal />
 
-      {/* Navegação Inferior (Bottom Bar) */}
+      {/* Navegação Inferior */}
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 px-6 py-2.5 z-40">
         <div className="max-w-md mx-auto flex justify-between items-center">
           <button
