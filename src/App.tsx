@@ -8,25 +8,34 @@ import CheckoutModal from './components/CheckoutModal';
 import CourierDashboard from './components/CourierDashboard';
 import MerchantDashboard from './components/MerchantDashboard';
 import AdminControlPro from './components/AdminControlPro';
-import { Home, Search, ShoppingBag, User, Store, Bike, ShieldCheck, ArrowRight, Mail, Lock, Phone, MapPin, Building } from 'lucide-react';
+import { Home, Search, ShoppingBag, User, Store, Bike, ShieldCheck, ArrowRight, Mail, Lock, Phone, Building, CheckCircle2 } from 'lucide-react';
+
+const SERRAN_CITIES = [
+  'Tianguá',
+  'Ubajara',
+  'São Benedito',
+  'Ibiapina',
+  'Guaraciaba do Norte',
+  'Carnaubal',
+  'Croatá',
+  'Ipu'
+];
 
 export default function App() {
   const { merchants, selectedMerchant, orders } = useApp();
   
-  // Estado de autenticação inicial (false = exige cadastro/login no primeiro acesso)
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [role, setRole] = useState<'customer' | 'merchant' | 'courier'>('customer');
 
-  // Estados de formulário
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: '',
-    city: 'Tianguá',
     storeName: '',
-    vehicleType: 'moto'
+    // Cidades que o comércio escolhe atender
+    serviceCities: ['Tianguá'] as string[]
   });
 
   const [activeTab, setActiveTab] = useState<'home' | 'search' | 'orders' | 'profile'>('home');
@@ -34,10 +43,24 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'customer' | 'courier' | 'merchant' | 'admin'>('customer');
 
-  // Tratar cadastro / login
+  const toggleCitySelection = (city: string) => {
+    if (formData.serviceCities.includes(city)) {
+      if (formData.serviceCities.length > 1) {
+        setFormData({
+          ...formData,
+          serviceCities: formData.serviceCities.filter(c => c !== city)
+        });
+      }
+    } else {
+      setFormData({
+        ...formData,
+        serviceCities: [...formData.serviceCities, city]
+      });
+    }
+  };
+
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simula a validação e criação da conta no Supabase
     setIsAuthenticated(true);
     setViewMode(role);
   };
@@ -51,13 +74,11 @@ export default function App() {
     return matchesCategory && matchesSearch;
   });
 
-  // 1. TELA DE PRIMEIRO CONTATO / CADASTRO / LOGIN
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
           
-          {/* Logo e Boas-Vindas */}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-red-600 rounded-2xl text-white font-black text-2xl shadow-lg shadow-red-600/30">
               IE
@@ -66,7 +87,6 @@ export default function App() {
             <p className="text-xs text-slate-400">O ecossistema completo da Serra da Ibiapaba</p>
           </div>
 
-          {/* Abas Alternar: Login / Criar Conta */}
           <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
             <button
               onClick={() => setAuthMode('register')}
@@ -85,7 +105,6 @@ export default function App() {
           <form onSubmit={handleAuthSubmit} className="space-y-4">
             {authMode === 'register' && (
               <>
-                {/* Seletor de Perfil (Usuário / Comércio / Entregador) */}
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-slate-300">Como deseja atuar no app?</label>
                   <div className="grid grid-cols-3 gap-2">
@@ -130,7 +149,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Campos de Nome */}
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
                   <input
@@ -143,22 +161,49 @@ export default function App() {
                   />
                 </div>
 
-                {/* Campo específico se for loja */}
                 {role === 'merchant' && (
-                  <div className="relative">
-                    <Building className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Nome da Loja / Oficina / Lanchonete"
-                      value={formData.storeName}
-                      onChange={(e) => setFormData({...formData, storeName: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
-                    />
-                  </div>
+                  <>
+                    <div className="relative">
+                      <Building className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Nome da Loja / Oficina / Lanchonete"
+                        value={formData.storeName}
+                        onChange={(e) => setFormData({...formData, storeName: e.target.value})}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+
+                    {/* SELETOR DE CIDADES DE ATUAÇÃO DO COMÉRCIO */}
+                    <div className="space-y-2 bg-slate-950/50 p-3 rounded-xl border border-slate-800">
+                      <label className="text-xs font-semibold text-amber-400 block">
+                        Cidades de Atuação (Selecione onde sua loja entrega/atende):
+                      </label>
+                      <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+                        {SERRAN_CITIES.map((city) => {
+                          const isSelected = formData.serviceCities.includes(city);
+                          return (
+                            <button
+                              key={city}
+                              type="button"
+                              onClick={() => toggleCitySelection(city)}
+                              className={`flex items-center justify-between p-2 rounded-lg border text-xs transition ${
+                                isSelected 
+                                  ? 'bg-amber-500/10 border-amber-500 text-white font-medium' 
+                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                              }`}
+                            >
+                              <span>{city}</span>
+                              {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
                 )}
 
-                {/* Telefone / WhatsApp */}
                 <div className="relative">
                   <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
                   <input
@@ -173,7 +218,6 @@ export default function App() {
               </>
             )}
 
-            {/* E-mail */}
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
               <input
@@ -186,7 +230,6 @@ export default function App() {
               />
             </div>
 
-            {/* Senha */}
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
               <input
@@ -199,7 +242,6 @@ export default function App() {
               />
             </div>
 
-            {/* Botão de Envio */}
             <button
               type="submit"
               className="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-red-600/20 mt-2"
@@ -214,7 +256,6 @@ export default function App() {
     );
   }
 
-  // 2. PAINÉIS ESPECÍFICOS DEPOIS DE LOGADO
   if (viewMode === 'courier') {
     return <CourierDashboard onSwitchToCustomer={() => setViewMode('customer')} />;
   }
@@ -227,7 +268,6 @@ export default function App() {
     return <AdminControlPro onSwitchToCustomer={() => setViewMode('customer')} />;
   }
 
-  // 3. NAVEGAÇÃO DE CLIENTE COM VITRINE E LOJAS
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-24">
       <Header />
@@ -304,8 +344,8 @@ export default function App() {
             <div className="w-16 h-16 bg-red-600/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
               <User className="w-8 h-8" />
             </div>
-            <h2 className="text-lg font-bold text-white">{formData.name || 'Usuário Ibiapaba'}</h2>
-            <p className="text-xs text-slate-400 mt-1">{formData.email || 'usuario@ibiapaba.com'}</p>
+            <h2 className="text-lg font-bold text-white">{formData.storeName || formData.name || 'Usuário Ibiapaba'}</h2>
+            <p className="text-xs text-slate-400 mt-1">{formData.email}</p>
           </div>
 
           <div className="space-y-3">
@@ -352,7 +392,6 @@ export default function App() {
       {selectedMerchant && <ProductCatalogModal />}
       <CheckoutModal />
 
-      {/* Navegação Inferior */}
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 px-6 py-2.5 z-40">
         <div className="max-w-md mx-auto flex justify-between items-center">
           <button
