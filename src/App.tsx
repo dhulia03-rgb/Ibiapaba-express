@@ -7,6 +7,7 @@ import CheckoutModal from './components/CheckoutModal';
 import CourierDashboard from './components/CourierDashboard';
 import MerchantDashboard from './components/MerchantDashboard';
 import AdminControlPro from './components/AdminControlPro';
+import { CategoryCarousel } from './CategoryCarousel';
 import { Home, Search, ShoppingBag, User, Store, Bike, ArrowRight, Mail, Lock, Phone, Building, CheckCircle2 } from 'lucide-react';
 
 const SERRAN_CITIES = [
@@ -271,6 +272,8 @@ export default function App() {
 
       {activeTab === 'home' && (
         <main className="max-w-7xl mx-auto px-4 py-4 space-y-6">
+          <CategoryCarousel mode="express" />
+
           <section>
             <h2 className="text-lg font-bold text-white mb-3">Lojas e Serviços na Serra</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
