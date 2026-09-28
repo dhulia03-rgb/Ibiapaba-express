@@ -1,116 +1,177 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Store, Order, CartItem, FulfillmentType, OrderStatus } from '../types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { Order, CartItem, CustomerAddress } from '../types';
+
+// Conexão com o Supabase através das variáveis do VITE
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface AppContextType {
-  userRole: 'cliente' | 'comercio' | 'entregador';
-  setUserRole: (role: 'cliente' | 'comercio' | 'entregador') => void;
-  
-  // Carrinho & Modalidade
   cart: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (id: string) => void;
-  clearCart: () => void;
-  fulfillmentType: FulfillmentType;
-  setFulfillmentType: (type: FulfillmentType) => void;
-  
-  // Gestão de Pedidos
   orders: Order[];
-  createOrder: (orderData: Partial<Order>) => Order;
-  updateOrderStatus: (orderId: string, status: OrderStatus) => void;
-  
-  // Rastreio Ativo
-  activeTrackingOrderId: string | null;
-  setActiveTrackingOrderId: (id: string | null) => void;
-  
-  // Totais Calculados
-  getDeliveryFee: () => number;
+  fulfillmentType: 'delivery' | 'pickup_delivery';
+  setFulfillmentType: (type: 'delivery' | 'pickup_delivery') => void;
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (itemId: string) => void;
+  clearCart: () => void;
   getCartTotal: () => number;
+  getDeliveryFee: () => number;
+  createOrder: (data: { customerAddress: CustomerAddress; customerName?: string; customerPhone?: string }) => Promise<void>;
+  updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [userRole, setUserRole] = useState<'cliente' | 'comercio' | 'entregador'>('cliente');
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [fulfillmentType, setFulfillmentType] = useState<FulfillmentType>('delivery');
   const [orders, setOrders] = useState<Order[]>([]);
-  const [activeTrackingOrderId, setActiveTrackingOrderId] = useState<string | null>(null);
+  const [fulfillmentType, setFulfillmentType] = useState<'delivery' | 'pickup_delivery'>('delivery');
 
-  // Valor base do frete da loja (exemplo fixo de R$ 7,00)
-  const baseDeliveryFee = 7.00;
+  // CARREGAR PEDIDOS E ESCUTAR MUDANÇAS EM TEMPO REAL (REALTIME)
+  useEffect(() => {
+    fetchOrders();
 
-  // 🧮 1. Cálculo Dinâmico da Taxa consoante a Modalidade
-  const getDeliveryFee = (): number => {
-    if (fulfillmentType === 'takeaway') return 0.00; // Retirada na Loja = Grátis
-    if (fulfillmentType === 'pickup_delivery') return baseDeliveryFee * 2; // Leva e Traz = Busca + Devolução
-    return baseDeliveryFee; // Entrega Padrão
-  };
+    // Inscreve no canal de WebSockets do Supabase
+    const channel = supabase
+      .channel('public:orders')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        (payload) => {
+          console.log('Sincronizando atualização do Supabase:', payload);
+          fetchOrders(); // Recarrega os pedidos ao haver qualquer alteração
+        }
+      )
+      .subscribe();
 
-  const getCartTotal = (): number => {
-    const itemsTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    return itemsTotal + getDeliveryFee();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) {
+        // Mapeia os dados do Supabase para o formato do App
+        const formattedOrders: Order[] = data.map((item: any) => ({
+          id: item.id,
+          createdAt: item.created_at,
+          customerName: item.customer_name || 'Cliente Ibiapaba',
+          customerPhone: item.customer_phone || '',
+          customerAddress: item.delivery_address,
+          items: item.items || [],
+          fulfillmentType: item.fulfillment_type,
+          status: item.status,
+          subtotal: Number(item.subtotal),
+          deliveryFee: Number(item.delivery_fee),
+          total: Number(item.total),
+          pickupPin: item.pickup_pin,
+          deliveryPin: item.delivery_pin,
+        }));
+        setOrders(formattedOrders);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar pedidos do Supabase:', err);
+    }
   };
 
   const addToCart = (item: CartItem) => {
-    setCart((prev) => [...prev, item]);
+    setCart((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) {
+        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i));
+      }
+      return [...prev, item];
+    });
   };
 
-  const removeFromCart = (id: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
+  const removeFromCart = (itemId: string) => {
+    setCart((prev) => prev.filter((item) => item.id !== itemId));
   };
 
   const clearCart = () => setCart([]);
 
-  // 🔑 2. Gerador Automático de PINs de Segurança (4 dígitos)
-  const generatePin = () => Math.floor(1000 + Math.random() * 9000).toString();
+  const getCartTotal = () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-  // 📦 3. Criação de Pedido com Logística Leva e Traz / Retirada
-  const createOrder = (orderData: Partial<Order>): Order => {
-    const newOrder: Order = {
-      id: `ORD-${Math.floor(100000 + Math.random() * 900000)}`,
-      createdAt: new Date().toISOString(),
+  const getDeliveryFee = () => (fulfillmentType === 'pickup_delivery' ? 12.0 : 7.0);
+
+  // CRIAR PEDIDO NO SUPABASE
+  const createOrder = async ({
+    customerAddress,
+    customerName = 'Cliente Ibiapaba',
+    customerPhone = '(88) 99999-9999',
+  }: {
+    customerAddress: CustomerAddress;
+    customerName?: string;
+    customerPhone?: string;
+  }) => {
+    const subtotal = getCartTotal();
+    const deliveryFee = getDeliveryFee();
+    const total = subtotal + deliveryFee;
+
+    // Gerar PINs aleatórios de 4 dígitos para segurança de Coleta e Devolução
+    const pickupPin = Math.floor(1000 + Math.random() * 9000).toString();
+    const deliveryPin = Math.floor(1000 + Math.random() * 9000).toString();
+
+    const newOrderData = {
+      customer_name: customerName,
+      customer_phone: customerPhone,
+      delivery_address: customerAddress,
       items: cart,
-      total: getCartTotal(),
-      deliveryFee: getDeliveryFee(),
-      fulfillmentType: fulfillmentType,
-      status: fulfillmentType === 'pickup_delivery' ? 'driver_collecting' : 'pending',
-      
-      // Gera PINs apenas se for Leva e Traz ou Retirada na Loja
-      pickupPin: fulfillmentType === 'pickup_delivery' ? generatePin() : undefined,
-      deliveryPin: (fulfillmentType === 'pickup_delivery' || fulfillmentType === 'takeaway') ? generatePin() : undefined,
-      
-      ...orderData,
-    } as Order;
+      fulfillment_type: fulfillmentType,
+      status: 'pending',
+      subtotal,
+      delivery_fee: deliveryFee,
+      total,
+      pickup_pin: pickupPin,
+      delivery_pin: deliveryPin,
+    };
 
-    setOrders((prev) => [newOrder, ...prev]);
-    clearCart();
-    return newOrder;
+    try {
+      const { error } = await supabase.from('orders').insert([newOrderData]);
+      if (error) throw error;
+      clearCart();
+    } catch (err) {
+      console.error('Erro ao salvar pedido no Supabase:', err);
+      alert('Houve um erro ao enviar seu pedido. Tente novamente.');
+    }
   };
 
-  const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-    setOrders((prev) =>
-      prev.map((ord) => (ord.id === orderId ? { ...ord, status } : ord))
-    );
+  // ATUALIZAR STATUS DO PEDIDO (USADO POR LOJISTAS E ENTREGADORES)
+  const updateOrderStatus = async (orderId: string, status: Order['status']) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status })
+        .eq('id', orderId);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error('Erro ao atualizar status:', err);
+    }
   };
 
   return (
     <AppContext.Provider
       value={{
-        userRole,
-        setUserRole,
         cart,
+        orders,
+        fulfillmentType,
+        setFulfillmentType,
         addToCart,
         removeFromCart,
         clearCart,
-        fulfillmentType,
-        setFulfillmentType,
-        orders,
+        getCartTotal,
+        getDeliveryFee,
         createOrder,
         updateOrderStatus,
-        activeTrackingOrderId,
-        setActiveTrackingOrderId,
-        getDeliveryFee,
-        getCartTotal,
       }}
     >
       {children}
@@ -120,6 +181,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
 export const useApp = () => {
   const context = useContext(AppContext);
-  if (!context) throw new Error('useApp deve ser usado dentro de um AppProvider');
+  if (!context) throw new Error('useApp deve ser usado dentro de AppProvider');
   return context;
 };
